@@ -35,5 +35,6 @@
   "legend.resources": "보유 재화 기준선",
   "legend.quantile": "{{q}}% 지점",
   "legend.pity": "천장 경계선",
-  "ownAllExistingPoolEgoHint": "픽업 E.G.O를 제외하고, 현재 추출에서 등장 가능한 기존 E.G.O를 모두 보유했다면 켜세요."
+  "ownAllExistingPoolEgoHint": "픽업 E.G.O를 제외하고, 현재 추출에서 등장 가능한 기존 E.G.O를 모두 보유했다면 켜세요.",
+  "resourcesSummary": "총 {{total}}회 뽑기 가능 · {{pity}} 천장 가능"
 }

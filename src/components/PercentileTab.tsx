@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import NumberField from "./NumberField";
 import { useTranslation } from "react-i18next";
 import { Targets, GlobalSettings, PityAlloc, cumulativeSuccess, Resources } from "@/lib/prob";
+import { formatPercentValue } from "@/lib/format";
 
 export default function PercentileTab({
   targets,
@@ -55,7 +56,10 @@ export default function PercentileTab({
         </div>
         <div className="text-4xl font-extrabold mb-1">
           {t("yourPercentile", {
-            top: top < 1 ? top.toFixed(4) : top.toFixed(2),
+            top: (() => {
+              const digits = top < 1 ? 4 : 2;
+              return formatPercentValue(F, digits).toFixed(digits);
+            })(),
           })}
         </div>
         <div className="text-xs opacity-70">F(n)=Pr[goal achieved by n]</div>

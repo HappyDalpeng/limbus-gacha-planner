@@ -9,13 +9,13 @@ import {
   resourcesToDraws,
   findNforQuantile,
   beforeAfterTable,
-  estimatePityNeeded,
   autoMaxDraws,
   PITY_STEP,
   Resources,
 } from "@/lib/prob";
 import { useElementWidth } from "@/lib/hooks";
 import { computeXTicks } from "@/lib/chart";
+import { formatPercentValue } from "@/lib/format";
 import {
   LineChart,
   Line,
@@ -90,9 +90,6 @@ export default function ChartTab({
   const rows = useMemo(() => {
     return beforeAfterTable(settings, targets, pityAlloc, maxN);
   }, [settings, targets, pityAlloc, maxN]);
-  const pityNeeded = useMemo(() => {
-    return estimatePityNeeded(settings, targets, pityAlloc, maxN);
-  }, [settings, targets, pityAlloc, maxN]);
 
   // Prevent reference labels from overlapping when very close
   const isRefLabelClose = useMemo(() => {
@@ -112,10 +109,11 @@ export default function ChartTab({
       <div className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
         <div className="flex flex-wrap items-center gap-3 text-sm mb-2">
           <div>
-            {t("probAtResources", { n: total })}: <b>{(probAtResources * 100).toFixed(2)}%</b>
+            {t("probAtResources", { n: total })}: <b>
+              {formatPercentValue(probAtResources, 2).toFixed(2)}%
+            </b>
           </div>
           <div>· {t("n90Line", { q: Math.round(q * 100), n: qN })}</div>
-          <div>· {t("pityNeeded", { r: pityNeeded })}</div>
           <label className="ml-auto flex items-center gap-2">
             <span>%</span>
             <NumberField
@@ -152,7 +150,12 @@ export default function ChartTab({
                 domain={[0, 1]}
                 ticks={[0, 0.25, 0.5, 0.75, 1]}
               />
-              <Tooltip formatter={(value) => [(Number(value) * 100).toFixed(2) + "%", "F(n)"]} />
+              <Tooltip
+                formatter={(value) => [
+                  `${formatPercentValue(Number(value), 2).toFixed(2)}%`,
+                  "F(n)",
+                ]}
+              />
               <Line type="monotone" dataKey="F" dot={false} strokeWidth={2} />
               <ReferenceLine
                 key={`res-${clampedTotal}`}
@@ -207,8 +210,8 @@ export default function ChartTab({
               {rows.map((r) => (
                 <tr key={r.pity} className="border-t border-zinc-200 dark:border-zinc-800">
                   <td className="px-2 py-1">{r.pity}</td>
-                  <td className="px-2 py-1">{(r.before * 100).toFixed(2)}%</td>
-                  <td className="px-2 py-1">{(r.after * 100).toFixed(2)}%</td>
+                  <td className="px-2 py-1">{`${formatPercentValue(r.before, 2).toFixed(2)}%`}</td>
+                  <td className="px-2 py-1">{`${formatPercentValue(r.after, 2).toFixed(2)}%`}</td>
                 </tr>
               ))}
             </tbody>

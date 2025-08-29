@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import NumberField from "./NumberField";
-import { Targets, GlobalSettings, Resources } from "@/lib/prob";
+import { Targets, GlobalSettings, Resources, resourcesToDraws, PITY_STEP } from "@/lib/prob";
 
 export default function SettingsPanel({
   settings,
@@ -21,6 +21,8 @@ export default function SettingsPanel({
 }) {
   const { t } = useTranslation();
   const [syncDesired, setSyncDesired] = useState(false);
+  const { total } = useMemo(() => resourcesToDraws(resources), [resources]);
+  const pityFromResources = Math.floor(total / PITY_STEP);
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -113,6 +115,9 @@ export default function SettingsPanel({
             value={resources.ticket10}
             onChange={(v) => setResources({ ...resources, ticket10: v })}
           />
+        </div>
+        <div className="mt-2 px-1 py-2 text-sm md:text-base font-medium">
+          {t("resourcesSummary", { total, pity: pityFromResources })}
         </div>
 
         <div className="grid grid-cols-2 gap-2 pt-2">

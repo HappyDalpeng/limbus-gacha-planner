@@ -16,22 +16,82 @@ export default function App() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
 
-  const [targets, setTargets] = useState<Targets>({
-    A: { pickup: 1, desired: 0 },
-    E: { pickup: 2, desired: 1 },
-    T: { pickup: 3, desired: 1 },
+  // LocalStorage keys
+  const LS_KEYS = {
+    targets: "gpp.targets.v1",
+    settings: "gpp.settings.v1",
+    resources: "gpp.resources.v1",
+  } as const;
+
+  // Safe JSON parse
+  const parseJSON = <T,>(s: string | null): T | null => {
+    if (!s) return null;
+    try {
+      return JSON.parse(s) as T;
+    } catch {
+      return null;
+    }
+  };
+
+  const sanitizeTargets = (raw: any): Targets => {
+    const def: Targets = {
+      A: { pickup: 1, desired: 0 },
+      E: { pickup: 2, desired: 1 },
+      T: { pickup: 3, desired: 1 },
+    };
+    const co = (x: any) => ({
+      pickup: Math.max(0, Number.isFinite(Number(x?.pickup)) ? Number(x.pickup) : 0),
+      desired: Math.max(0, Number.isFinite(Number(x?.desired)) ? Number(x.desired) : 0),
+    });
+    const A = co(raw?.A);
+    const E = co(raw?.E);
+    const T = co(raw?.T);
+    // Clamp desired <= pickup
+    A.desired = Math.min(A.desired, A.pickup);
+    E.desired = Math.min(E.desired, E.pickup);
+    T.desired = Math.min(T.desired, T.pickup);
+    return { A, E, T };
+  };
+
+  const sanitizeSettings = (raw: any): GlobalSettings => {
+    return {
+      autoRecommend: Boolean(raw?.autoRecommend ?? true),
+      ownAllExistingPoolEgo: Boolean(raw?.ownAllExistingPoolEgo ?? false),
+    };
+  };
+
+  const sanitizeResources = (raw: any): Resources => ({
+    lunacy: Math.max(0, Number.isFinite(Number(raw?.lunacy)) ? Number(raw.lunacy) : 0),
+    ticket1: Math.max(0, Number.isFinite(Number(raw?.ticket1)) ? Number(raw.ticket1) : 0),
+    ticket10: Math.max(0, Number.isFinite(Number(raw?.ticket10)) ? Number(raw.ticket10) : 0),
   });
 
-  const [settings, setSettings] = useState<GlobalSettings>({
-    autoRecommend: true,
-    ownAllExistingPoolEgo: false,
+  // Lazy init from localStorage
+  const [targets, setTargets] = useState<Targets>(() => {
+    const stored = parseJSON<Targets>(localStorage.getItem(LS_KEYS.targets));
+    return stored ? sanitizeTargets(stored) : sanitizeTargets(null);
   });
 
-  const [resources, setResources] = useState({
-    lunacy: 0,
-    ticket1: 0,
-    ticket10: 0,
+  const [settings, setSettings] = useState<GlobalSettings>(() => {
+    const stored = parseJSON<GlobalSettings>(localStorage.getItem(LS_KEYS.settings));
+    return stored ? sanitizeSettings(stored) : sanitizeSettings(null);
   });
+
+  const [resources, setResources] = useState<Resources>(() => {
+    const stored = parseJSON<Resources>(localStorage.getItem(LS_KEYS.resources));
+    return stored ? sanitizeResources(stored) : sanitizeResources(null);
+  });
+
+  // Persist to localStorage on change
+  useEffect(() => {
+    localStorage.setItem(LS_KEYS.targets, JSON.stringify(targets));
+  }, [targets]);
+  useEffect(() => {
+    localStorage.setItem(LS_KEYS.settings, JSON.stringify(settings));
+  }, [settings]);
+  useEffect(() => {
+    localStorage.setItem(LS_KEYS.resources, JSON.stringify(resources));
+  }, [resources]);
 
   const pityAlloc = useMemo(() => {
     const max = autoMaxDraws(targets);
