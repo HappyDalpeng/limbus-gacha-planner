@@ -109,8 +109,7 @@ export default function ChartTab({
       <div className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
         <div className="flex flex-wrap items-center gap-3 text-sm mb-2">
           <div>
-            {t("probAtResources", { n: total })}:{" "}
-            <b>{formatPercentValue(probAtResources, 2).toFixed(2)}%</b>
+            {t("probAtResources", { n: total })}: <b>{formatPercentValue(probAtResources, 2)}%</b>
           </div>
           <div>· {t("n90Line", { q: Math.round(q * 100), n: qN })}</div>
           <label className="ml-auto flex items-center gap-2">
@@ -150,10 +149,7 @@ export default function ChartTab({
                 ticks={[0, 0.25, 0.5, 0.75, 1]}
               />
               <Tooltip
-                formatter={(value) => [
-                  `${formatPercentValue(Number(value), 2).toFixed(2)}%`,
-                  "F(n)",
-                ]}
+                formatter={(value) => [`${formatPercentValue(Number(value), 2)}%`, "F(n)"]}
               />
               <Line type="monotone" dataKey="F" dot={false} strokeWidth={2} />
               <ReferenceLine
@@ -209,8 +205,8 @@ export default function ChartTab({
               {rows.map((r) => (
                 <tr key={r.pity} className="border-t border-zinc-200 dark:border-zinc-800">
                   <td className="px-2 py-1">{r.pity}</td>
-                  <td className="px-2 py-1">{`${formatPercentValue(r.before, 2).toFixed(2)}%`}</td>
-                  <td className="px-2 py-1">{`${formatPercentValue(r.after, 2).toFixed(2)}%`}</td>
+                  <td className="px-2 py-1">{`${formatPercentValue(r.before, 2)}%`}</td>
+                  <td className="px-2 py-1">{`${formatPercentValue(r.after, 2)}%`}</td>
                 </tr>
               ))}
             </tbody>

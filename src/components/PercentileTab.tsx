@@ -58,7 +58,7 @@ export default function PercentileTab({
           {t("yourPercentile", {
             top: (() => {
               const digits = top < 1 ? 4 : 2;
-              return formatPercentValue(F, digits).toFixed(digits);
+              return formatPercentValue(F, digits);
             })(),
           })}
         </div>
