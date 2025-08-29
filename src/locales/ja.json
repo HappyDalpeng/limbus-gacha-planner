@@ -29,8 +29,7 @@
   "autoRecommend": "交換の自動推奨",
   "hasAnnouncer": "アナウンサーバナーを含む",
   "maxDraws": "グラフ最大回数 (既定 2000)",
-  "pityNeeded": "必要な天井回数の目安: 約{{r}}回"
-  ,
+  "pityNeeded": "必要な天井回数の目安: 約{{r}}回",
   "legend.resources": "所持資源",
   "legend.quantile": "{{q}}% 地点",
   "legend.pity": "天井の区切り"

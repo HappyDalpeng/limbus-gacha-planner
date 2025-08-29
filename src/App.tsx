@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TopBar from "./components/TopBar";
 import SettingsPanel from "./components/SettingsPanel";
-import ChartTab from "./components/ChartTab";
-import PercentileTab from "./components/PercentileTab";
-import { Targets, GlobalSettings, computeGreedyPityAlloc, autoMaxDraws } from "./lib/prob";
+const ChartTab = lazy(() => import("./components/ChartTab"));
+const PercentileTab = lazy(() => import("./components/PercentileTab"));
+import {
+  Targets,
+  GlobalSettings,
+  computeGreedyPityAlloc,
+  autoMaxDraws,
+  Resources,
+} from "./lib/prob";
 
 export default function App() {
   const { t } = useTranslation();
@@ -38,7 +44,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-zinc-900 dark:text-zinc-100 bg-zinc-50 dark:bg-zinc-950">
-      <TopBar settings={settings} setSettings={setSettings} />
+      <TopBar />
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-6">
         <div className="mb-4">
           <div className="flex items-center justify-between">
@@ -65,12 +71,7 @@ export default function App() {
           )}
         </div>
 
-        <Tabs
-          targets={targets}
-          settings={settings}
-          resources={resources}
-          pityAlloc={pityAlloc}
-        />
+        <Tabs targets={targets} settings={settings} resources={resources} pityAlloc={pityAlloc} />
       </main>
     </div>
   );
@@ -84,7 +85,7 @@ function Tabs({
 }: {
   targets: Targets;
   settings: GlobalSettings;
-  resources: { lunacy: number; ticket1: number; ticket10: number };
+  resources: Resources;
   pityAlloc: ("A" | "E" | "T")[];
 }) {
   const { t } = useTranslation();
@@ -115,21 +116,23 @@ function Tabs({
           {t("tabs.perc")}
         </button>
       </div>
-      {tab === "curve" ? (
-        <ChartTab
-          targets={targets}
-          settings={settings}
-          resources={resources}
-          pityAlloc={pityAlloc}
-        />
-      ) : (
-        <PercentileTab
-          targets={targets}
-          settings={settings}
-          resources={resources}
-          pityAlloc={pityAlloc}
-        />
-      )}
+      <Suspense fallback={<div className="text-sm opacity-70">Loading…</div>}>
+        {tab === "curve" ? (
+          <ChartTab
+            targets={targets}
+            settings={settings}
+            resources={resources}
+            pityAlloc={pityAlloc}
+          />
+        ) : (
+          <PercentileTab
+            targets={targets}
+            settings={settings}
+            resources={resources}
+            pityAlloc={pityAlloc}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

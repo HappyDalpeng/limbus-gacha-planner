@@ -1,12 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import NumberField from "./NumberField";
 import { useTranslation } from "react-i18next";
-import {
-  Targets,
-  GlobalSettings,
-  PityAlloc,
-  cumulativeSuccess,
-} from "@/lib/prob";
+import { Targets, GlobalSettings, PityAlloc, cumulativeSuccess, Resources } from "@/lib/prob";
 
 export default function PercentileTab({
   targets,
@@ -16,7 +11,7 @@ export default function PercentileTab({
 }: {
   targets: Targets;
   settings: GlobalSettings;
-  resources: { lunacy: number; ticket1: number; ticket10: number };
+  resources: Resources;
   pityAlloc: PityAlloc;
 }) {
   const { t } = useTranslation();
@@ -25,7 +20,7 @@ export default function PercentileTab({
 
   const F = useMemo(
     () => cumulativeSuccess(n, settings, targets, pityAlloc),
-    [n, settings, targets, pityAlloc]
+    [n, settings, targets, pityAlloc],
   );
   const top = F * 100;
 
@@ -53,10 +48,7 @@ export default function PercentileTab({
         </label>
       </div>
 
-      <div
-        ref={cardRef}
-        className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-6 text-center"
-      >
+      <div ref={cardRef} className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-6 text-center">
         <div className="text-lg font-semibold mb-2">🎯 {t("title")}</div>
         <div className="text-sm opacity-80 mb-1">
           {t("enterActualPulls")}: <b>{n}</b>

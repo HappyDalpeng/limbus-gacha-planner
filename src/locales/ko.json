@@ -29,8 +29,7 @@
   "autoRecommend": "교환 자동 추천",
   "hasAnnouncer": "아나운서 배너 포함",
   "maxDraws": "그래프 최대 뽑기(기본 2000)",
-  "pityNeeded": "예상 필요한 천장 수: 약 {{r}}회"
-  ,
+  "pityNeeded": "예상 필요한 천장 수: 약 {{r}}회",
   "legend.resources": "보유 재화 기준선",
   "legend.quantile": "{{q}}% 지점",
   "legend.pity": "천장 경계선"

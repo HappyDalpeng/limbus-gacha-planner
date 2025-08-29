@@ -1,12 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-export default function TopBar({
-  settings,
-  setSettings,
-}: {
-  settings: any;
-  setSettings: (s: any) => void;
-}) {
+export default function TopBar() {
   const { t, i18n } = useTranslation();
 
   const setLang = (lng: string) => {

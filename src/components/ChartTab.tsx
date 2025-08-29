@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import NumberField from "./NumberField";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,7 +11,11 @@ import {
   beforeAfterTable,
   estimatePityNeeded,
   autoMaxDraws,
+  PITY_STEP,
+  Resources,
 } from "@/lib/prob";
+import { useElementWidth } from "@/lib/hooks";
+import { computeXTicks } from "@/lib/chart";
 import {
   LineChart,
   Line,
@@ -23,6 +27,16 @@ import {
   CartesianGrid,
 } from "recharts";
 
+// Centralize colors/styles for clarity
+const COLOR = {
+  resources: "#ef4444", // red-500
+  quantile: "#10b981", // emerald-500
+  pity: "#a1a1aa", // zinc-400
+  grid: "#e5e7eb", // zinc-200
+} as const;
+
+type Datum = { n: number; F: number };
+
 export default function ChartTab({
   targets,
   settings,
@@ -31,7 +45,7 @@ export default function ChartTab({
 }: {
   targets: Targets;
   settings: GlobalSettings;
-  resources: { lunacy: number; ticket1: number; ticket10: number };
+  resources: Resources;
   pityAlloc: PityAlloc;
 }) {
   const { t } = useTranslation();
@@ -42,27 +56,16 @@ export default function ChartTab({
   const clampedTotal = Math.min(total, maxN);
 
   // Measure chart width to pick readable tick spacing
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [chartWidth, setChartWidth] = useState<number>(800);
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width;
-      if (w) setChartWidth(w);
-    });
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, []);
+  const [containerRef, chartWidth] = useElementWidth<HTMLDivElement>();
 
   const data = useMemo(() => {
-    const maxN = autoMaxDraws(targets);
-    const arr: { n: number; F: number }[] = [];
+    const arr: Datum[] = [];
     for (let n = 0; n <= maxN; n += 5) {
       arr.push({ n, F: cumulativeSuccess(n, settings, targets, pityAlloc) });
     }
-    for (let r = 1; r <= Math.floor(maxN / 200); r++) {
-      const a = r * 200 - 1,
-        b = r * 200;
+    for (let r = 1; r <= Math.floor(maxN / PITY_STEP); r++) {
+      const a = r * PITY_STEP - 1,
+        b = r * PITY_STEP;
       [a, b].forEach((n) => {
         if (!arr.find((d) => d.n === n))
           arr.push({
@@ -73,43 +76,16 @@ export default function ChartTab({
     }
     arr.sort((a, b) => a.n - b.n);
     return arr;
-  }, [targets, settings, pityAlloc]);
+  }, [maxN, targets, settings, pityAlloc]);
 
-  const xTicks = useMemo(() => {
-    const width = chartWidth || 800;
-    // Estimate label width using canvas measurement for worst-case label
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const sample = String(maxN);
-    const font = getComputedStyle(document.documentElement).font || "12px sans-serif";
-    if (ctx) ctx.font = font;
-    const textW = Math.ceil((ctx ? ctx.measureText(sample).width : 18) + 8);
-    const minPx = Math.max(18, textW); // ensure margin
-    const targetCount = Math.max(6, Math.min(60, Math.floor(width / minPx)));
-    const threshold = Math.max(10, Math.ceil(maxN / targetCount));
-    // Build "nice" step candidates: 10 × {1, 2, 2.5, 5} × 10^k
-    const bases = [1, 2, 2.5, 5];
-    const steps: number[] = [];
-    for (let scale = 10; scale <= Math.max(10, maxN * 2 + 10); scale *= 10) {
-      for (const b of bases) steps.push(Math.round(b * scale));
-    }
-    steps.sort((a, b) => a - b);
-    const step = steps.find((s) => s >= threshold) || 10;
-    const set = new Set<number>();
-    for (let n = 0; n <= maxN; n += step) set.add(n);
-    // Always include 200 multiples (pity boundaries) and end caps
-    for (let n = 0; n <= maxN; n += 200) set.add(n);
-    set.add(0);
-    set.add(maxN);
-    return Array.from(set).sort((a, b) => a - b);
-  }, [maxN, chartWidth]);
+  const xTicks = useMemo(() => computeXTicks(maxN, chartWidth), [maxN, chartWidth]);
 
   const qN = useMemo(() => {
     return findNforQuantile(q, settings, targets, pityAlloc, maxN);
   }, [q, settings, targets, pityAlloc, maxN]);
   const probAtResources = useMemo(
     () => cumulativeSuccess(total, settings, targets, pityAlloc),
-    [total, settings, targets, pityAlloc]
+    [total, settings, targets, pityAlloc],
   );
   const rows = useMemo(() => {
     return beforeAfterTable(settings, targets, pityAlloc, maxN);
@@ -126,13 +102,17 @@ export default function ChartTab({
     return distPx < 28; // if closer than ~28px, treat as overlapping
   }, [qN, clampedTotal, chartWidth, maxN]);
 
+  const pityBoundaries = useMemo(
+    () => Array.from({ length: Math.floor(maxN / PITY_STEP) }, (_, i) => (i + 1) * PITY_STEP),
+    [maxN],
+  );
+
   return (
     <div className="space-y-3">
       <div className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
         <div className="flex flex-wrap items-center gap-3 text-sm mb-2">
           <div>
-            {t("probAtResources", { n: total })}:{" "}
-            <b>{(probAtResources * 100).toFixed(2)}%</b>
+            {t("probAtResources", { n: total })}: <b>{(probAtResources * 100).toFixed(2)}%</b>
           </div>
           <div>· {t("n90Line", { q: Math.round(q * 100), n: qN })}</div>
           <div>· {t("pityNeeded", { r: pityNeeded })}</div>
@@ -141,36 +121,22 @@ export default function ChartTab({
             <NumberField
               className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 py-1"
               value={Math.round(q * 100)}
-              onChange={(num) =>
-                setQ(Math.min(0.99, Math.max(0.01, (num || 0) / 100)))
-              }
+              onChange={(num) => setQ(Math.min(0.99, Math.max(0.01, (num || 0) / 100)))}
               min={1}
               max={99}
             />
           </label>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs opacity-80 mb-2">
-          <span className="flex items-center gap-2">
-            <span
-              className="inline-block w-4 border-t-2 border-dashed"
-              style={{ borderColor: "#ef4444" }}
-            />
-            {t("legend.resources")}
-          </span>
-          <span className="flex items-center gap-2">
-            <span
-              className="inline-block w-4 border-t-2 border-dashed"
-              style={{ borderColor: "#10b981" }}
-            />
-            {t("legend.quantile", { q: Math.round(q * 100) })}
-          </span>
-        </div>
+        <LegendInline
+          resourcesLabel={t("legend.resources")}
+          quantileLabel={t("legend.quantile", { q: Math.round(q * 100) })}
+        />
 
         <div className="h-80" ref={containerRef}>
           <ResponsiveContainer>
             <LineChart data={data} margin={{ right: 24, bottom: 28, top: 24 }}>
-              <CartesianGrid stroke="#e5e7eb" strokeDasharray="2 2" />
+              <CartesianGrid stroke={COLOR.grid} strokeDasharray="2 2" />
               <XAxis
                 dataKey="n"
                 type="number"
@@ -178,6 +144,7 @@ export default function ChartTab({
                 ticks={xTicks}
                 interval={0}
                 tickLine={false}
+                tickMargin={8}
                 allowDecimals={false}
               />
               <YAxis
@@ -185,39 +152,36 @@ export default function ChartTab({
                 domain={[0, 1]}
                 ticks={[0, 0.25, 0.5, 0.75, 1]}
               />
-              <Tooltip
-                formatter={(value) => [
-                  (Number(value) * 100).toFixed(2) + "%",
-                  "F(n)",
-                ]}
-              />
+              <Tooltip formatter={(value) => [(Number(value) * 100).toFixed(2) + "%", "F(n)"]} />
               <Line type="monotone" dataKey="F" dot={false} strokeWidth={2} />
               <ReferenceLine
                 key={`res-${clampedTotal}`}
                 x={clampedTotal}
-                stroke="#ef4444"
+                stroke={COLOR.resources}
                 strokeDasharray="6 4"
                 label={
                   isRefLabelClose
-                    ? { value: `${total}`, position: "insideTop", fill: "#ef4444", dy: 6 }
-                    : { value: `${total}`, position: "top", fill: "#ef4444", dy: 0 }
+                    ? { value: `${total}`, position: "insideTop", fill: COLOR.resources, dy: 6 }
+                    : { value: `${total}`, position: "top", fill: COLOR.resources, dy: 0 }
                 }
               />
               <ReferenceLine
                 key={`qn-${qN}`}
                 x={qN}
-                stroke="#10b981"
+                stroke={COLOR.quantile}
                 strokeDasharray="6 4"
-                label={{ value: `${Math.round(q * 100)}%`, position: "top", fill: "#10b981", dy: 0 }}
+                label={{
+                  value: `${Math.round(q * 100)}%`,
+                  position: "top",
+                  fill: COLOR.quantile,
+                  dy: 0,
+                }}
               />
-              {Array.from(
-                { length: Math.floor(autoMaxDraws(targets) / 200) },
-                (_, i) => (i + 1) * 200
-              ).map((n) => (
+              {pityBoundaries.map((n) => (
                 <ReferenceLine
                   key={n}
                   x={n}
-                  stroke="#a1a1aa"
+                  stroke={COLOR.pity}
                   strokeWidth={1}
                   strokeOpacity={0.75}
                   strokeDasharray="2 4"
@@ -241,10 +205,7 @@ export default function ChartTab({
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr
-                  key={r.pity}
-                  className="border-t border-zinc-200 dark:border-zinc-800"
-                >
+                <tr key={r.pity} className="border-t border-zinc-200 dark:border-zinc-800">
                   <td className="px-2 py-1">{r.pity}</td>
                   <td className="px-2 py-1">{(r.before * 100).toFixed(2)}%</td>
                   <td className="px-2 py-1">{(r.after * 100).toFixed(2)}%</td>
@@ -254,6 +215,33 @@ export default function ChartTab({
           </table>
         </div>
       </details>
+    </div>
+  );
+}
+
+function LegendInline({
+  resourcesLabel,
+  quantileLabel,
+}: {
+  resourcesLabel: string;
+  quantileLabel: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-xs opacity-80 mb-2">
+      <span className="flex items-center gap-2">
+        <span
+          className="inline-block w-4 border-t-2 border-dashed"
+          style={{ borderColor: COLOR.resources }}
+        />
+        {resourcesLabel}
+      </span>
+      <span className="flex items-center gap-2">
+        <span
+          className="inline-block w-4 border-t-2 border-dashed"
+          style={{ borderColor: COLOR.quantile }}
+        />
+        {quantileLabel}
+      </span>
     </div>
   );
 }

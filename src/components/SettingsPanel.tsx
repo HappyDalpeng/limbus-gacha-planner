@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import NumberField from "./NumberField";
-import { Targets, GlobalSettings } from "@/lib/prob";
+import { Targets, GlobalSettings, Resources } from "@/lib/prob";
 
 export default function SettingsPanel({
   settings,
@@ -14,12 +14,8 @@ export default function SettingsPanel({
   setSettings: (s: GlobalSettings) => void;
   targets: Targets;
   setTargets: (t: Targets) => void;
-  resources: { lunacy: number; ticket1: number; ticket10: number };
-  setResources: (r: {
-    lunacy: number;
-    ticket1: number;
-    ticket10: number;
-  }) => void;
+  resources: Resources;
+  setResources: (r: Resources) => void;
 }) {
   const { t } = useTranslation();
 
@@ -69,9 +65,7 @@ export default function SettingsPanel({
             <input
               type="checkbox"
               checked={settings.hasAnnouncer}
-              onChange={(e) =>
-                setSettings({ ...settings, hasAnnouncer: e.target.checked })
-              }
+              onChange={(e) => setSettings({ ...settings, hasAnnouncer: e.target.checked })}
             />
             <span>{t("hasAnnouncer")}</span>
           </label>
@@ -79,15 +73,11 @@ export default function SettingsPanel({
             <input
               type="checkbox"
               checked={settings.autoRecommend}
-              onChange={(e) =>
-                setSettings({ ...settings, autoRecommend: e.target.checked })
-              }
+              onChange={(e) => setSettings({ ...settings, autoRecommend: e.target.checked })}
             />
             <span>{t("autoRecommend")}</span>
           </label>
         </div>
-
-        {/* maxDraws removed: chart auto-scales to desired×200 */}
       </section>
     </div>
   );
