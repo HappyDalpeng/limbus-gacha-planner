@@ -118,6 +118,14 @@ export default function ChartTab({
     return estimatePityNeeded(settings, targets, pityAlloc, maxN);
   }, [settings, targets, pityAlloc, maxN]);
 
+  // Prevent reference labels from overlapping when very close
+  const isRefLabelClose = useMemo(() => {
+    if (!chartWidth) return false;
+    const pxPerDraw = chartWidth / Math.max(1, maxN);
+    const distPx = Math.abs(qN - clampedTotal) * pxPerDraw;
+    return distPx < 28; // if closer than ~28px, treat as overlapping
+  }, [qN, clampedTotal, chartWidth, maxN]);
+
   return (
     <div className="space-y-3">
       <div className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
@@ -157,18 +165,11 @@ export default function ChartTab({
             />
             {t("legend.quantile", { q: Math.round(q * 100) })}
           </span>
-          <span className="flex items-center gap-2">
-            <span
-              className="inline-block w-4 border-t-2 border-dotted"
-              style={{ borderColor: "#a1a1aa" }}
-            />
-            {t("legend.pity")}
-          </span>
         </div>
 
         <div className="h-80" ref={containerRef}>
           <ResponsiveContainer>
-            <LineChart data={data}>
+            <LineChart data={data} margin={{ right: 24, bottom: 28, top: 24 }}>
               <CartesianGrid stroke="#e5e7eb" strokeDasharray="2 2" />
               <XAxis
                 dataKey="n"
@@ -196,14 +197,18 @@ export default function ChartTab({
                 x={clampedTotal}
                 stroke="#ef4444"
                 strokeDasharray="6 4"
-                label={{ value: `${total}`, position: "top" }}
+                label={
+                  isRefLabelClose
+                    ? { value: `${total}`, position: "insideTop", fill: "#ef4444", dy: 6 }
+                    : { value: `${total}`, position: "top", fill: "#ef4444", dy: 0 }
+                }
               />
               <ReferenceLine
                 key={`qn-${qN}`}
                 x={qN}
                 stroke="#10b981"
                 strokeDasharray="6 4"
-                label={{ value: `${Math.round(q * 100)}%`, position: "top" }}
+                label={{ value: `${Math.round(q * 100)}%`, position: "top", fill: "#10b981", dy: 0 }}
               />
               {Array.from(
                 { length: Math.floor(autoMaxDraws(targets) / 200) },
@@ -212,10 +217,10 @@ export default function ChartTab({
                 <ReferenceLine
                   key={n}
                   x={n}
-                  stroke="#71717a"
-                  strokeWidth={2}
-                  strokeOpacity={0.9}
-                  strokeDasharray="3 4"
+                  stroke="#a1a1aa"
+                  strokeWidth={1}
+                  strokeOpacity={0.75}
+                  strokeDasharray="2 4"
                 />
               ))}
             </LineChart>
