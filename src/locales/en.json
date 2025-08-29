@@ -28,10 +28,12 @@
   "before": "Before",
   "after": "After",
   "autoRecommend": "Auto-recommend exchange",
+  "ownAllExistingPoolEgo": "Own all existing-pool E.G.O",
   "hasAnnouncer": "Include Announcer banner",
   "maxDraws": "Max draws on chart (default 2000)",
   "pityNeeded": "Estimated pity cycles needed: ~{{r}}",
   "legend.resources": "Resources",
   "legend.quantile": "{{q}}% point",
-  "legend.pity": "Pity thresholds"
+  "legend.pity": "Pity thresholds",
+  "ownAllExistingPoolEgoHint": "If you own all non-pickup E.G.O currently in the pool, turn this on."
 }

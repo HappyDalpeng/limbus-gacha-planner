@@ -5,8 +5,8 @@ export type Targets = {
 };
 
 export type GlobalSettings = {
-  hasAnnouncer: boolean;
   autoRecommend: boolean;
+  ownAllExistingPoolEgo: boolean; // whether user owns all existing-pool (non-pickup) E.G.O
 };
 export type Resources = { lunacy: number; ticket1: number; ticket10: number };
 export type PityAlloc = ("A" | "E" | "T")[];
@@ -58,14 +58,17 @@ export function wantProbPerCategory(
   hasAnnouncer: boolean,
   egoAvailable: boolean,
   targets: Targets,
+  opts?: { egoHalf?: number },
 ) {
   const base = baseCategoryProbs(hasAnnouncer, egoAvailable);
-  const half = 0.5,
-    clamp = (x: number) => Math.max(0, Math.min(1, x));
+  const halfA = 0.5;
+  const halfT = 0.5;
+  const halfE = opts?.egoHalf ?? 0.5;
+  const clamp = (x: number) => Math.max(0, Math.min(1, x));
 
-  const pA = base.pA * half * ratio(targets.A.desired, targets.A.pickup);
-  const pE = base.pE * half * ratio(targets.E.desired, targets.E.pickup);
-  const pT = base.p3 * half * ratio(targets.T.desired, targets.T.pickup);
+  const pA = base.pA * halfA * ratio(targets.A.desired, targets.A.pickup);
+  const pE = base.pE * halfE * ratio(targets.E.desired, targets.E.pickup);
+  const pT = base.p3 * halfT * ratio(targets.T.desired, targets.T.pickup);
 
   return { pA: clamp(pA), pE: clamp(pE), pT: clamp(pT) };
 }
@@ -150,7 +153,10 @@ export function cumulativeSuccess(
   const mE = Math.max(0, targets.E.desired - pityCounts.E);
   const mT = Math.max(0, targets.T.desired - pityCounts.T);
 
-  const { pA, pE, pT } = wantProbPerCategory(settings.hasAnnouncer, true, targets);
+  const hasAnnouncer = targets.A.pickup > 0;
+  const egoAvailable = targets.E.pickup > 0 || !settings.ownAllExistingPoolEgo;
+  const egoHalf = targets.E.pickup > 0 && settings.ownAllExistingPoolEgo ? 1 : 0.5;
+  const { pA, pE, pT } = wantProbPerCategory(hasAnnouncer, egoAvailable, targets, { egoHalf });
 
   const tailA = 1 - binomCDF(mA - 1, n, pA),
     tailE = 1 - binomCDF(mE - 1, n, pE),
@@ -169,7 +175,10 @@ export function computeGreedyPityAlloc(Nmax: number, settings: GlobalSettings, t
     T: targets.T.desired,
   } as Record<"A" | "E" | "T", number>;
 
-  const { pA, pE, pT } = wantProbPerCategory(settings.hasAnnouncer, true, targets);
+  const hasAnnouncer = targets.A.pickup > 0;
+  const egoAvailable = targets.E.pickup > 0 || !settings.ownAllExistingPoolEgo;
+  const egoHalf = targets.E.pickup > 0 && settings.ownAllExistingPoolEgo ? 1 : 0.5;
+  const { pA, pE, pT } = wantProbPerCategory(hasAnnouncer, egoAvailable, targets, { egoHalf });
 
   // Greedy: at each pity boundary, assign to the category with largest marginal gain
   for (let r = 1; r <= R; r++) {

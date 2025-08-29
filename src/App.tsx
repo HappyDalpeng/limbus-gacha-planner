@@ -23,8 +23,8 @@ export default function App() {
   });
 
   const [settings, setSettings] = useState<GlobalSettings>({
-    hasAnnouncer: true,
     autoRecommend: true,
+    ownAllExistingPoolEgo: false,
   });
 
   const [resources, setResources] = useState({

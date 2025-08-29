@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import NumberField from "./NumberField";
 import { Targets, GlobalSettings, Resources } from "@/lib/prob";
 
@@ -59,6 +60,32 @@ export default function SettingsPanel({
           value={targets.E}
           sync={syncDesired}
           onChange={(v) => setTargets({ ...targets, E: v })}
+          headerRight={
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={settings.ownAllExistingPoolEgo}
+                  onChange={(e) =>
+                    setSettings({ ...settings, ownAllExistingPoolEgo: e.target.checked })
+                  }
+                />
+                <span>{t("ownAllExistingPoolEgo")}</span>
+              </label>
+              <div className="relative group">
+                <span
+                  aria-label={t("ownAllExistingPoolEgoHint")}
+                  className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-zinc-400 text-[10px] leading-none select-none cursor-help"
+                  title={t("ownAllExistingPoolEgoHint")}
+                >
+                  i
+                </span>
+                <div className="hidden group-hover:block absolute z-10 right-0 mt-1 w-64 text-xs p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow">
+                  {t("ownAllExistingPoolEgoHint")}
+                </div>
+              </div>
+            </div>
+          }
         />
         <TargetInputs
           label={t("threeStar")}
@@ -92,14 +119,6 @@ export default function SettingsPanel({
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={settings.hasAnnouncer}
-              onChange={(e) => setSettings({ ...settings, hasAnnouncer: e.target.checked })}
-            />
-            <span>{t("hasAnnouncer")}</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
               checked={settings.autoRecommend}
               onChange={(e) => setSettings({ ...settings, autoRecommend: e.target.checked })}
             />
@@ -116,16 +135,21 @@ function TargetInputs({
   value,
   onChange,
   sync = false,
+  headerRight,
 }: {
   label: string;
   value: { pickup: number; desired: number };
   onChange: (v: { pickup: number; desired: number }) => void;
   sync?: boolean;
+  headerRight?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 bg-white dark:bg-zinc-900">
-      <div className="text-sm font-medium mb-2">{label}</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-medium">{label}</div>
+        {headerRight && <div>{headerRight}</div>}
+      </div>
       <div className="flex items-end gap-3">
         <label className="flex-1 text-sm grid gap-1">
           <span className="text-xs opacity-70">{t("desiredCount")}</span>
@@ -135,8 +159,11 @@ function TargetInputs({
               (sync ? " opacity-60 cursor-not-allowed" : "")
             }
             value={value.desired}
-            onChange={(v) => onChange({ ...value, desired: Math.max(0, v) })}
+            onChange={(v) =>
+              onChange({ ...value, desired: Math.max(0, Math.min(v, value.pickup)) })
+            }
             min={0}
+            max={value.pickup}
             disabled={sync}
             aria-label={t("desiredCount")}
           />
@@ -150,7 +177,11 @@ function TargetInputs({
             onChange={(v) =>
               onChange({
                 pickup: Math.max(0, v),
-                desired: sync ? Math.max(0, v) : value.desired,
+                desired: (() => {
+                  const newPickup = Math.max(0, v);
+                  if (sync) return newPickup;
+                  return Math.max(0, Math.min(value.desired, newPickup));
+                })(),
               })
             }
             min={0}

@@ -34,9 +34,15 @@ export default function NumberField({ value, onChange, className, ...rest }: Pro
       onChange={(e) => {
         const v = e.target.value;
         setText(v);
+        // Avoid committing an empty string mid-edit; commit on blur instead
+        if (v === "") return;
         onChange(commit(v));
       }}
-      onBlur={() => setText(String(commit(text)))}
+      onBlur={() => {
+        const c = commit(text);
+        setText(String(c));
+        onChange(c);
+      }}
       {...rest}
     />
   );

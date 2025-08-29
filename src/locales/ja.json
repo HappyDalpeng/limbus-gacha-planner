@@ -28,10 +28,12 @@
   "before": "前",
   "after": "後",
   "autoRecommend": "交換の自動推奨",
+  "ownAllExistingPoolEgo": "既存の排出E.G.Oを全所持",
   "hasAnnouncer": "アナウンサーバナーを含む",
   "maxDraws": "グラフ最大回数 (既定 2000)",
   "pityNeeded": "必要な天井回数の目安: 約{{r}}回",
   "legend.resources": "所持リソース",
   "legend.quantile": "{{q}}% 地点",
-  "legend.pity": "天井の区切り"
+  "legend.pity": "天井の区切り",
+  "ownAllExistingPoolEgoHint": "ピックアップ以外の排出対象E.G.Oをすべて所持している場合はオンにしてください。"
 }
