@@ -109,9 +109,8 @@ export default function ChartTab({
       <div className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
         <div className="flex flex-wrap items-center gap-3 text-sm mb-2">
           <div>
-            {t("probAtResources", { n: total })}: <b>
-              {formatPercentValue(probAtResources, 2).toFixed(2)}%
-            </b>
+            {t("probAtResources", { n: total })}:{" "}
+            <b>{formatPercentValue(probAtResources, 2).toFixed(2)}%</b>
           </div>
           <div>· {t("n90Line", { q: Math.round(q * 100), n: qN })}</div>
           <label className="ml-auto flex items-center gap-2">

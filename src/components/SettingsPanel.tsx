@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
-import NumberField from "./NumberField";
-import { Targets, GlobalSettings, Resources, resourcesToDraws, PITY_STEP } from "@/lib/prob";
+import { useState } from "react";
+import { Targets, GlobalSettings, Resources } from "@/lib/prob";
+import TargetInputs from "./TargetInputs";
+import ResourcesPanel from "./ResourcesPanel";
 
 export default function SettingsPanel({
   settings,
@@ -21,8 +21,6 @@ export default function SettingsPanel({
 }) {
   const { t } = useTranslation();
   const [syncDesired, setSyncDesired] = useState(false);
-  const { total } = useMemo(() => resourcesToDraws(resources), [resources]);
-  const pityFromResources = Math.floor(total / PITY_STEP);
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -98,29 +96,8 @@ export default function SettingsPanel({
       </section>
 
       <section className="space-y-2">
-        <h3 className="font-semibold">{t("resources")}</h3>
-        <div className="grid grid-cols-3 gap-2">
-          <Num
-            label={t("lunacy")}
-            value={resources.lunacy}
-            onChange={(v) => setResources({ ...resources, lunacy: v })}
-          />
-          <Num
-            label={t("ticket1")}
-            value={resources.ticket1}
-            onChange={(v) => setResources({ ...resources, ticket1: v })}
-          />
-          <Num
-            label={t("ticket10")}
-            value={resources.ticket10}
-            onChange={(v) => setResources({ ...resources, ticket10: v })}
-          />
-        </div>
-        <div className="mt-2 px-1 py-2 text-sm md:text-base font-medium">
-          {t("resourcesSummary", { total, pity: pityFromResources })}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 pt-2">
+        <ResourcesPanel resources={resources} setResources={setResources} />
+        <div className="grid grid-cols-2 gap-2">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -132,90 +109,5 @@ export default function SettingsPanel({
         </div>
       </section>
     </div>
-  );
-}
-
-function TargetInputs({
-  label,
-  value,
-  onChange,
-  sync = false,
-  headerRight,
-}: {
-  label: string;
-  value: { pickup: number; desired: number };
-  onChange: (v: { pickup: number; desired: number }) => void;
-  sync?: boolean;
-  headerRight?: ReactNode;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 bg-white dark:bg-zinc-900">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-sm font-medium">{label}</div>
-        {headerRight && <div>{headerRight}</div>}
-      </div>
-      <div className="flex items-end gap-3">
-        <label className="flex-1 text-sm grid gap-1">
-          <span className="text-xs opacity-70">{t("desiredCount")}</span>
-          <NumberField
-            className={
-              "w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 " +
-              (sync ? " opacity-60 cursor-not-allowed" : "")
-            }
-            value={value.desired}
-            onChange={(v) =>
-              onChange({ ...value, desired: Math.max(0, Math.min(v, value.pickup)) })
-            }
-            min={0}
-            max={value.pickup}
-            disabled={sync}
-            aria-label={t("desiredCount")}
-          />
-        </label>
-        <div className="pb-2 opacity-60">/</div>
-        <label className="flex-1 text-sm grid gap-1">
-          <span className="text-xs opacity-70">{t("pickupCount")}</span>
-          <NumberField
-            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2"
-            value={value.pickup}
-            onChange={(v) =>
-              onChange({
-                pickup: Math.max(0, v),
-                desired: (() => {
-                  const newPickup = Math.max(0, v);
-                  if (sync) return newPickup;
-                  return Math.max(0, Math.min(value.desired, newPickup));
-                })(),
-              })
-            }
-            min={0}
-            aria-label={t("pickupCount")}
-          />
-        </label>
-      </div>
-    </div>
-  );
-}
-
-function Num({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <label className="text-sm grid gap-1">
-      <span>{label}</span>
-      <NumberField
-        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2"
-        value={value}
-        onChange={(v) => onChange(Math.max(0, v))}
-        min={0}
-      />
-    </label>
   );
 }
