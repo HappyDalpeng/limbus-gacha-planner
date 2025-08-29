@@ -1,7 +1,7 @@
 export type Targets = {
-  A: { featured: number; desired: number };
-  E: { featured: number; desired: number };
-  T: { featured: number; desired: number };
+  A: { pickup: number; desired: number };
+  E: { pickup: number; desired: number };
+  T: { pickup: number; desired: number };
 };
 
 export type GlobalSettings = {
@@ -63,9 +63,9 @@ export function wantProbPerCategory(
   const half = 0.5,
     clamp = (x: number) => Math.max(0, Math.min(1, x));
 
-  const pA = base.pA * half * ratio(targets.A.desired, targets.A.featured);
-  const pE = base.pE * half * ratio(targets.E.desired, targets.E.featured);
-  const pT = base.p3 * half * ratio(targets.T.desired, targets.T.featured);
+  const pA = base.pA * half * ratio(targets.A.desired, targets.A.pickup);
+  const pE = base.pE * half * ratio(targets.E.desired, targets.E.pickup);
+  const pT = base.p3 * half * ratio(targets.T.desired, targets.T.pickup);
 
   return { pA: clamp(pA), pE: clamp(pE), pT: clamp(pT) };
 }
@@ -106,15 +106,26 @@ export function binomPMF(k: number, n: number, p: number) {
   return Math.exp(logp);
 }
 export function binomCDF(k: number, n: number, p: number) {
-  if (n > 500) {
-    const mu = n * p,
-      sigma = Math.sqrt(n * p * (1 - p));
-    const z = (k + 0.5 - mu) / (sigma || 1e-12); // continuity correction
-    return normalCDF(z);
+  // Handle edge cases explicitly
+  if (p <= 0) return k >= 0 ? 1 : 0;
+  if (p >= 1) return k >= n ? 1 : 0;
+  if (k < 0) return 0;
+  if (k >= n) return 1;
+
+  // Numerically stable cumulative sum via recurrence
+  // P(X=0) = (1-p)^n
+  // P(X=i) = P(X=i-1) * ((n - i + 1)/i) * (p/(1-p))
+  const q = 1 - p;
+  let pmf = Math.exp(n * Math.log(Math.max(1e-16, q))); // guard tiny negatives
+  let sum = pmf;
+  for (let i = 1; i <= k; i++) {
+    pmf = pmf * ((n - i + 1) / i) * (p / q);
+    sum += pmf;
+    // Early break if additional mass is negligible
+    if (!Number.isFinite(pmf) || pmf < 1e-18) break;
   }
-  let s = 0;
-  for (let i = 0; i <= k; i++) s += binomPMF(i, n, p);
-  return Math.min(1, Math.max(0, s));
+  // Clamp for safety
+  return Math.min(1, Math.max(0, sum));
 }
 function normalCDF(z: number) {
   const t = 1 / (1 + 0.2316419 * Math.abs(z));

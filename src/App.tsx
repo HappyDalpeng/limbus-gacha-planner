@@ -17,9 +17,9 @@ export default function App() {
   const [open, setOpen] = useState(true);
 
   const [targets, setTargets] = useState<Targets>({
-    A: { featured: 1, desired: 0 },
-    E: { featured: 2, desired: 1 },
-    T: { featured: 3, desired: 1 },
+    A: { pickup: 1, desired: 0 },
+    E: { pickup: 2, desired: 1 },
+    T: { pickup: 3, desired: 1 },
   });
 
   const [settings, setSettings] = useState<GlobalSettings>({
