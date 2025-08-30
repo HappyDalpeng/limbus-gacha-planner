@@ -7,10 +7,11 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   CartesianGrid,
+  ReferenceDot,
 } from "recharts";
 import TooltipContent from "./TooltipContent";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type Datum = { n: number; F: number };
 
@@ -117,6 +118,46 @@ export default function ProbabilityChart({
     );
   }
 
+  function BubbleLabel({ viewBox, text, align = "center" }: any) {
+    const cx = typeof viewBox?.cx === "number" ? viewBox.cx : viewBox?.x || 0;
+    const cy = typeof viewBox?.cy === "number" ? viewBox.cy : viewBox?.y || 0;
+    const padX = 6;
+    const textW = 6 * String(text).length;
+    const w = padX * 2 + textW;
+    const h = 16;
+    let tx = cx - w / 2;
+    if (align === "left") tx = cx - w - 8;
+    if (align === "right") tx = cx + 8;
+    return (
+      <g pointerEvents="none" transform={`translate(${tx}, ${cy - h - 8})`}>
+        <rect width={w} height={h} rx={4} ry={4} fill="rgba(17,24,39,0.85)" />
+        <text x={padX} y={12} fontSize={10} fill="#fff">
+          {text}
+        </text>
+      </g>
+    );
+  }
+  const mcDenseData = useMemo(() => {
+    if (!showMC || !Array.isArray(mcData) || mcData.length === 0) return mcData;
+    const arr: { n: number; MC: number }[] = [];
+    // ensure sorted
+    const src = [...mcData].sort((a, b) => a.n - b.n);
+    let j = 0;
+    for (let n = 0; n <= maxN; n++) {
+      while (j + 1 < src.length && src[j + 1].n <= n) j++;
+      const a = src[j];
+      const b = src[Math.min(j + 1, src.length - 1)];
+      let y = a.MC;
+      if (b.n !== a.n) {
+        const t = Math.max(0, Math.min(1, (n - a.n) / (b.n - a.n)));
+        y = a.MC + (b.MC - a.MC) * t;
+      }
+      if (arr.length && y < arr[arr.length - 1].MC) y = arr[arr.length - 1].MC;
+      arr.push({ n, MC: y });
+    }
+    return arr;
+  }, [showMC, mcData, maxN]);
+
   return (
     <ResponsiveContainer debounce={100}>
       <ComposedChart data={data as any} margin={{ right: 24, bottom: 12, top: 24 }}>
@@ -137,19 +178,10 @@ export default function ProbabilityChart({
           ticks={[0, 0.25, 0.5, 0.75, 1]}
         />
         <Tooltip content={<TooltipContent showMC={showMC} mcData={mcData} />} />
-        <Line
-          type="monotone"
-          dataKey="F"
-          dot={false}
-          strokeWidth={2}
-          stroke={colors.curve}
-          isAnimationActive={false}
-          connectNulls
-        />
         {showMC && mcData.length > 0 && (
           <Line
             type="monotone"
-            data={mcData as any}
+            data={mcDenseData as any}
             dataKey="MC"
             name="MC"
             stroke={colors.mc}
@@ -180,6 +212,15 @@ export default function ProbabilityChart({
             isAnimationActive={false}
           />
         )}
+        <Line
+          type="monotone"
+          dataKey="F"
+          dot={false}
+          strokeWidth={2}
+          stroke={colors.curve}
+          isAnimationActive={false}
+          connectNulls
+        />
         <ReferenceLine
           key={`res-${clampedTotal}`}
           x={clampedTotal}
@@ -193,7 +234,7 @@ export default function ProbabilityChart({
               fill: colors.resources,
               dy: 0,
               dx: isRefLabelClose ? (toRight ? -10 : 10) : 0,
-              fontSize: 14,
+              fontSize: 11,
             } as any;
           })()}
         />
@@ -210,7 +251,7 @@ export default function ProbabilityChart({
               fill: colors.quantile,
               dy: 0,
               dx: isRefLabelClose ? (toRight ? 10 : -10) : 0,
-              fontSize: 14,
+              fontSize: 11,
             } as any;
           })()}
         />
@@ -225,34 +266,20 @@ export default function ProbabilityChart({
           />
         ))}
 
-        {/* Intersection dots with tooltip-like labels */}
-        <Line
-          type="linear"
-          data={[{ n: clampedTotal, y: resY }] as any}
-          dataKey="y"
-          stroke="none"
-          dot={
-            <BubbleDot
-              color={colors.resources}
-              label={resLabel}
-              align={isRefLabelClose ? "left" : "center"}
-            />
-          }
-          isAnimationActive={false}
+        {/* Intersection dots with tooltip-like labels (ReferenceDot avoids tooltip interference) */}
+        <ReferenceDot
+          x={clampedTotal}
+          y={resY}
+          r={4}
+          fill={colors.resources}
+          label={<BubbleLabel text={resLabel} align={isRefLabelClose ? "left" : "center"} />}
         />
-        <Line
-          type="linear"
-          data={[{ n: qN, y: qY }] as any}
-          dataKey="y"
-          stroke="none"
-          dot={
-            <BubbleDot
-              color={colors.quantile}
-              label={qLabel}
-              align={isRefLabelClose ? "right" : "center"}
-            />
-          }
-          isAnimationActive={false}
+        <ReferenceDot
+          x={qN}
+          y={qY}
+          r={4}
+          fill={colors.quantile}
+          label={<BubbleLabel text={qLabel} align={isRefLabelClose ? "right" : "center"} />}
         />
       </ComposedChart>
     </ResponsiveContainer>

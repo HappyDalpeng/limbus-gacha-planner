@@ -79,7 +79,8 @@ export default function ChartTab({
 
   const data = useMemo(() => {
     const arr: Datum[] = [];
-    for (let n = 0; n <= maxN; n += 5) {
+    // Use step=1 for smoother tooltip/cursor tracking along the curve
+    for (let n = 0; n <= maxN; n += 1) {
       arr.push({ n, F: cumulativeSuccess(n, settings, targets, pityAlloc) });
     }
     for (let r = 1; r <= Math.floor(maxN / PITY_STEP); r++) {
