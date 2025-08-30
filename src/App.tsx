@@ -35,18 +35,25 @@ export default function App() {
   };
 
   const sanitizeTargets = (raw: any): Targets => {
+    // Defaults for first-time visitors (desired/pickup): A 1/1, E 2/2, T 2/5
     const def: Targets = {
-      A: { pickup: 1, desired: 0 },
-      E: { pickup: 2, desired: 1 },
-      T: { pickup: 3, desired: 1 },
+      A: { pickup: 1, desired: 1 },
+      E: { pickup: 2, desired: 2 },
+      T: { pickup: 5, desired: 2 },
     };
-    const co = (x: any) => ({
-      pickup: Math.max(0, Number.isFinite(Number(x?.pickup)) ? Number(x.pickup) : 0),
-      desired: Math.max(0, Number.isFinite(Number(x?.desired)) ? Number(x.desired) : 0),
+    const co = (x: any, d: { pickup: number; desired: number }) => ({
+      pickup: Math.max(
+        0,
+        Number.isFinite(Number(x?.pickup)) ? Number(x.pickup) : d.pickup,
+      ),
+      desired: Math.max(
+        0,
+        Number.isFinite(Number(x?.desired)) ? Number(x.desired) : d.desired,
+      ),
     });
-    const A = co(raw?.A);
-    const E = co(raw?.E);
-    const T = co(raw?.T);
+    const A = co(raw?.A, def.A);
+    const E = co(raw?.E, def.E);
+    const T = co(raw?.T, def.T);
     // Clamp desired <= pickup
     A.desired = Math.min(A.desired, A.pickup);
     E.desired = Math.min(E.desired, E.pickup);
@@ -75,9 +82,19 @@ export default function App() {
   };
 
   const sanitizeResources = (raw: any): Resources => ({
-    lunacy: Math.max(0, Number.isFinite(Number(raw?.lunacy)) ? Number(raw.lunacy) : 0),
-    ticket1: Math.max(0, Number.isFinite(Number(raw?.ticket1)) ? Number(raw.ticket1) : 0),
-    ticket10: Math.max(0, Number.isFinite(Number(raw?.ticket10)) ? Number(raw.ticket10) : 0),
+    // Defaults for first-time visitors: lunacy 20000, 1-pull 26, 10-pull 4
+    lunacy: Math.max(
+      0,
+      Number.isFinite(Number(raw?.lunacy)) ? Number(raw.lunacy) : 20000,
+    ),
+    ticket1: Math.max(
+      0,
+      Number.isFinite(Number(raw?.ticket1)) ? Number(raw.ticket1) : 26,
+    ),
+    ticket10: Math.max(
+      0,
+      Number.isFinite(Number(raw?.ticket10)) ? Number(raw.ticket10) : 4,
+    ),
   });
 
   // Lazy init from localStorage
