@@ -42,5 +42,7 @@
   "ownAllExistingPoolEgoHint": "픽업 E.G.O를 제외하고, 현재 추출에서 등장 가능한 기존 E.G.O를 모두 보유했다면 켜세요.",
   "resourcesSummary": "총 {{total}}회 뽑기 가능 · {{pity}} 천장 가능",
   "autoArrange": "순서 추천",
-  "dragToReorder": "드래그하여 순서 변경"
+  "dragToReorder": "드래그하여 순서 변경",
+  "disclaimer.line1": "본 웹페이지는 게임 림버스 컴퍼니의 비공식 팬메이드 플래너이며, 프로젝트문과 아무런 관련이 없습니다.",
+  "disclaimer.line2": "모든 게임 아트워크, 정보, 애셋의 권리와 저작권은 해당 저작권자의 소유입니다."
 }

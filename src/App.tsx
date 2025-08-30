@@ -150,6 +150,13 @@ export default function App() {
 
         <Tabs targets={targets} settings={settings} resources={resources} pityAlloc={pityAlloc} />
       </main>
+      <footer className="px-4 py-6 border-t border-zinc-200 dark:border-zinc-800">
+        <div className="mx-auto max-w-6xl text-center text-xs opacity-70 leading-relaxed">
+          {t("disclaimer.line1")}
+          <br />
+          {t("disclaimer.line2")}
+        </div>
+      </footer>
     </div>
   );
 }

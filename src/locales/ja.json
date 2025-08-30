@@ -42,5 +42,7 @@
   "ownAllExistingPoolEgoHint": "ピックアップ以外の排出対象E.G.Oをすべて所持している場合はオンにしてください。",
   "resourcesSummary": "合計 {{total}} 回引ける・{{pity}} 天井可能",
   "autoArrange": "順序を提案",
-  "dragToReorder": "ドラッグで並べ替え"
+  "dragToReorder": "ドラッグで並べ替え",
+  "disclaimer.line1": "本サイトはゲーム『Limbus Company』の非公式ファンメイド・プランナーであり、ProjectMoon とは一切関係ありません。",
+  "disclaimer.line2": "ゲーム内のアートワーク・情報・アセットの権利および著作権は、それぞれの権利者に帰属します。"
 }
