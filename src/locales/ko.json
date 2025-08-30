@@ -51,5 +51,8 @@
   "showMC": "시뮬레이션 보조선 표시",
   "mcMeta": "MC: 샘플 {{s}} × 포인트 {{k}}",
   "mcPityReflected": "천장 교환 반영",
-  "rerunMC": "시뮬레이션 다시 실행"
+  "rerunMC": "시뮬레이션 다시 실행",
+  "runSingleSim": "1회 시뮬레이션",
+  "sim.progress": "진행률",
+  "sim.forward": "남은 성공확률"
 }

@@ -51,5 +51,8 @@
   "showMC": "Show simulation",
   "mcMeta": "MC: {{s}} samples × {{k}} points",
   "mcPityReflected": "Pity exchange reflected",
-  "rerunMC": "Re-run simulation"
+  "rerunMC": "Re-run simulation",
+  "runSingleSim": "Run single simulation",
+  "sim.progress": "Progress",
+  "sim.forward": "Forward chance"
 }

@@ -51,5 +51,8 @@
   "showMC": "シミュレーションを表示",
   "mcMeta": "MC: サンプル {{s}} × ポイント {{k}}",
   "mcPityReflected": "天井交換を反映",
-  "rerunMC": "シミュレーションを再実行"
+  "rerunMC": "シミュレーションを再実行",
+  "runSingleSim": "単一シミュレーション",
+  "sim.progress": "進捗",
+  "sim.forward": "残り達成確率"
 }
