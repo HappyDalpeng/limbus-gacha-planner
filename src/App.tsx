@@ -8,6 +8,7 @@ import {
   Targets,
   GlobalSettings,
   computeGreedyPityAlloc,
+  computePriorityPityAlloc,
   autoMaxDraws,
   Resources,
 } from "./lib/prob";
@@ -54,9 +55,18 @@ export default function App() {
   };
 
   const sanitizeSettings = (raw: any): GlobalSettings => {
+    const defPrio: ("A" | "E" | "T")[] = ["E", "T", "A"];
+    const pr = Array.isArray(raw?.exchangePriority) ? (raw.exchangePriority as any[]) : defPrio;
+    const filtered = pr.filter((x) => x === "A" || x === "E" || x === "T");
+    const uniq: ("A" | "E" | "T")[] = [];
+    for (const x of filtered) if (!uniq.includes(x)) uniq.push(x as any);
+    (["A", "E", "T"] as const).forEach((k) => {
+      if (!uniq.includes(k)) uniq.push(k);
+    });
     return {
       autoRecommend: Boolean(raw?.autoRecommend ?? true),
       ownAllExistingPoolEgo: Boolean(raw?.ownAllExistingPoolEgo ?? false),
+      exchangePriority: uniq,
     };
   };
 
@@ -95,7 +105,8 @@ export default function App() {
 
   const pityAlloc = useMemo(() => {
     const max = autoMaxDraws(targets);
-    return computeGreedyPityAlloc(max, settings, targets);
+    if (settings.autoRecommend) return computeGreedyPityAlloc(max, settings, targets);
+    return computePriorityPityAlloc(max, targets, settings.exchangePriority || ["E", "T", "A"]);
   }, [settings, targets]);
 
   useEffect(() => {
@@ -126,6 +137,7 @@ export default function App() {
                 setTargets={setTargets}
                 resources={resources}
                 setResources={setResources}
+                pityAlloc={pityAlloc}
               />
             </div>
           )}

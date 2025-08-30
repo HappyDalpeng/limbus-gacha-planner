@@ -7,6 +7,7 @@ export type Targets = {
 export type GlobalSettings = {
   autoRecommend: boolean;
   ownAllExistingPoolEgo: boolean; // whether user owns all existing-pool (non-pickup) E.G.O
+  exchangePriority?: ("A" | "E" | "T")[]; // manual exchange priority when autoRecommend is off
 };
 export type Resources = { lunacy: number; ticket1: number; ticket10: number };
 export type PityAlloc = ("A" | "E" | "T")[];
@@ -156,16 +157,134 @@ export function cumulativeSuccess(
   const hasAnnouncer = targets.A.pickup > 0;
   const egoAvailable = targets.E.pickup > 0 || !settings.ownAllExistingPoolEgo;
   const egoHalf = targets.E.pickup > 0 && settings.ownAllExistingPoolEgo ? 1 : 0.5;
-  const { pA, pE, pT } = wantProbPerCategory(hasAnnouncer, egoAvailable, targets, { egoHalf });
 
-  const tailA = 1 - binomCDF(mA - 1, n, pA),
-    tailE = 1 - binomCDF(mE - 1, n, pE),
-    tailT = 1 - binomCDF(mT - 1, n, pT);
+  // Base per-draw probabilities for categories
+  const base = baseCategoryProbs(hasAnnouncer, egoAvailable);
+  const half = 0.5;
+  const pA = base.pA * half * ratio(targets.A.desired, targets.A.pickup);
+  const pT = base.p3 * half * ratio(targets.T.desired, targets.T.pickup);
+
+  // Binomial tails for A and T remain as before
+  const tailA = 1 - binomCDF(mA - 1, n, pA);
+  const tailT = 1 - binomCDF(mT - 1, n, pT);
+
+  // E.G.O: without-replacement style approximation via 2D DP over (desired obtained, total pickup obtained)
+  const tailE = (() => {
+    if (mE <= 0) return 1; // nothing needed
+    const pickupTotal = Math.max(0, targets.E.pickup);
+    if (pickupTotal <= 0) return 0; // impossible
+    const pEbase = base.pE * egoHalf; // mass going to E.G.O per draw
+    if (pEbase <= 0) return 0;
+
+    const desiredTotal = Math.max(0, targets.E.desired);
+    // Fallback to binomial approx for unusually large pickup counts to keep UI responsive
+    const DP_PICKUP_LIMIT = 12;
+    if (pickupTotal > DP_PICKUP_LIMIT) {
+      const pApprox = pEbase * ratio(desiredTotal, pickupTotal);
+      return 1 - binomCDF(mE - 1, n, pApprox);
+    }
+    // dp[s][t] = Pr[have s desired and t total pickup] after current draw step
+    const dp: number[][] = Array.from({ length: mE + 1 }, () =>
+      new Array<number>(pickupTotal + 1).fill(0),
+    );
+    dp[0][0] = 1;
+
+    for (let draw = 0; draw < n; draw++) {
+      const next: number[][] = Array.from({ length: mE + 1 }, () =>
+        new Array<number>(pickupTotal + 1).fill(0),
+      );
+      const tMaxPrev = Math.min(pickupTotal, draw);
+      const tMaxNext = Math.min(pickupTotal, draw + 1);
+      for (let tGot = 0; tGot <= tMaxPrev; tGot++) {
+        const sMax = Math.min(mE, tGot);
+        for (let s = 0; s <= sMax; s++) {
+          const prob = dp[s][tGot];
+          if (prob <= 0) continue;
+          if (s >= mE) {
+            next[mE][tGot] += prob; // absorb
+            continue;
+          }
+          const pickupRem = pickupTotal - tGot;
+          if (pickupRem <= 0) {
+            next[s][tGot] += prob; // no pickup left; only other categories
+            continue;
+          }
+          const desiredRem = Math.max(0, desiredTotal - s);
+          const pDesired = desiredRem > 0 ? pEbase * (desiredRem / pickupRem) : 0;
+          const pUndesired = pEbase * Math.max(0, (pickupRem - desiredRem) / pickupRem);
+          const pOther = 1 - pEbase;
+
+          const sNext = Math.min(mE, s + 1);
+          const tNext = Math.min(pickupTotal, tGot + 1);
+          next[sNext][tNext] += prob * pDesired;
+          next[s][tNext] += prob * pUndesired;
+          next[s][tGot] += prob * pOther;
+        }
+      }
+      // swap (only within reachable bounds)
+      for (let tGot = 0; tGot <= tMaxNext; tGot++) {
+        const sMax = Math.min(mE, tGot);
+        for (let s = 0; s <= sMax; s++) dp[s][tGot] = next[s][tGot];
+      }
+      // Early exit if mass mostly absorbed
+      const succ = dp[mE].reduce((a, b) => a + b, 0);
+      if (succ >= 1 - 1e-12) break;
+    }
+    return dp[mE].reduce((a, b) => a + b, 0);
+  })();
 
   return tailA * tailE * tailT;
 }
 
 export function computeGreedyPityAlloc(Nmax: number, settings: GlobalSettings, targets: Targets) {
+  const R = Math.floor(Nmax / PITY_STEP);
+  const alloc: PityAlloc = [];
+
+  const remaining: Record<"A" | "E" | "T", number> = {
+    A: Math.max(0, targets.A.desired),
+    E: Math.max(0, targets.E.desired),
+    T: Math.max(0, targets.T.desired),
+  };
+
+  for (let r = 1; r <= R; r++) {
+    const nBefore = r * PITY_STEP - 1;
+    const nAfter = r * PITY_STEP;
+
+    // Baseline before placing this pity
+    const Fbefore = cumulativeSuccess(nBefore, settings, targets, alloc);
+
+    const candidates: ("A" | "E" | "T")[] = (["A", "E", "T"] as const).filter(
+      (c): c is "A" | "E" | "T" => remaining[c] > 0,
+    );
+    if (!candidates.length) {
+      alloc.push("E");
+      continue;
+    }
+
+    let best: { cat: "A" | "E" | "T"; gain: number } | null = null;
+    for (const c of candidates) {
+      const trial = alloc.concat(c);
+      const Fafter = cumulativeSuccess(nAfter, settings, targets, trial);
+      const gain = Fafter - Fbefore;
+      if (!best || gain > best.gain) best = { cat: c, gain };
+    }
+
+    const chosen = (best ? best.cat : candidates[0]) as "A" | "E" | "T";
+    alloc.push(chosen);
+    remaining[chosen] = Math.max(0, remaining[chosen] - 1);
+  }
+
+  return alloc;
+}
+
+// Deterministic pity allocation by fixed priority order.
+// At each pity boundary, pick the first category in `priority` that still needs items.
+// If none need items, default to "E" to match previous fallback.
+export function computePriorityPityAlloc(
+  Nmax: number,
+  targets: Targets,
+  priority: ("A" | "E" | "T")[],
+) {
   const R = Math.floor(Nmax / PITY_STEP),
     alloc: PityAlloc = [];
 
@@ -175,29 +294,17 @@ export function computeGreedyPityAlloc(Nmax: number, settings: GlobalSettings, t
     T: targets.T.desired,
   } as Record<"A" | "E" | "T", number>;
 
-  const hasAnnouncer = targets.A.pickup > 0;
-  const egoAvailable = targets.E.pickup > 0 || !settings.ownAllExistingPoolEgo;
-  const egoHalf = targets.E.pickup > 0 && settings.ownAllExistingPoolEgo ? 1 : 0.5;
-  const { pA, pE, pT } = wantProbPerCategory(hasAnnouncer, egoAvailable, targets, { egoHalf });
+  const prio =
+    priority && priority.length === 3 ? priority : (["E", "T", "A"] as ("A" | "E" | "T")[]);
 
-  // Greedy: at each pity boundary, assign to the category with largest marginal gain
   for (let r = 1; r <= R; r++) {
-    const n = r * PITY_STEP - 1;
-    const opts: { cat: "A" | "E" | "T"; gain: number }[] = [];
-
-    if (remaining.A > 0) opts.push({ cat: "A", gain: binomPMF(remaining.A - 1, n, pA) });
-    if (remaining.E > 0) opts.push({ cat: "E", gain: binomPMF(remaining.E - 1, n, pE) });
-    if (remaining.T > 0) opts.push({ cat: "T", gain: binomPMF(remaining.T - 1, n, pT) });
-
-    if (!opts.length) {
+    const c = prio.find((k) => remaining[k] > 0) as "A" | "E" | "T" | undefined;
+    if (c) {
+      alloc.push(c);
+      remaining[c] = Math.max(0, remaining[c] - 1);
+    } else {
       alloc.push("E");
-      continue;
     }
-
-    opts.sort((a, b) => b.gain - a.gain);
-    const c = opts[0].cat;
-    alloc.push(c);
-    remaining[c] = Math.max(0, remaining[c] - 1);
   }
 
   return alloc;

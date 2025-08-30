@@ -28,6 +28,8 @@
   "before": "이전",
   "after": "이후",
   "autoRecommend": "교환 자동 추천",
+  "exchangeOrder": "교환 우선순위",
+  "exchangePlan": "교환 계획",
   "ownAllExistingPoolEgo": "기존 추출 가능 E.G.O 보유",
   "hasAnnouncer": "아나운서 배너 포함",
   "maxDraws": "그래프 최대 뽑기(기본 2000)",

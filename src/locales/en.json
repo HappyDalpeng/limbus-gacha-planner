@@ -28,6 +28,8 @@
   "before": "Before",
   "after": "After",
   "autoRecommend": "Auto-recommend exchange",
+  "exchangeOrder": "Exchange priority",
+  "exchangePlan": "Exchange plan",
   "ownAllExistingPoolEgo": "Own all existing-pool E.G.O",
   "hasAnnouncer": "Include Announcer banner",
   "maxDraws": "Max draws on chart (default 2000)",

@@ -28,6 +28,8 @@
   "before": "前",
   "after": "後",
   "autoRecommend": "交換の自動推奨",
+  "exchangeOrder": "交換優先順位",
+  "exchangePlan": "交換プラン",
   "ownAllExistingPoolEgo": "既存の排出E.G.Oを全所持",
   "hasAnnouncer": "アナウンサーバナーを含む",
   "maxDraws": "グラフ最大回数 (既定 2000)",

@@ -4,6 +4,82 @@ import { Targets, GlobalSettings, Resources } from "@/lib/prob";
 import TargetInputs from "./TargetInputs";
 import ResourcesPanel from "./ResourcesPanel";
 
+function Chip({ children }: { children: string }) {
+  return (
+    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+      {children}
+    </span>
+  );
+}
+
+function AutoPlanView({ pityAlloc }: { pityAlloc: ("A" | "E" | "T")[] }) {
+  const { t } = useTranslation();
+  if (!pityAlloc.length) return null;
+  const label = (c: "A" | "E" | "T") =>
+    c === "A" ? t("announcer") : c === "E" ? t("ego") : t("threeStar");
+  return (
+    <div className="text-sm space-y-1">
+      <div className="opacity-70">{t("exchangePlan")}</div>
+      <div className="flex flex-wrap gap-1">
+        {pityAlloc.map((c, i) => (
+          <Chip key={i}>{label(c)}</Chip>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PriorityEditor({
+  order,
+  onChange,
+}: {
+  order: ("A" | "E" | "T")[];
+  onChange: (o: ("A" | "E" | "T")[]) => void;
+}) {
+  const { t } = useTranslation();
+  const move = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= order.length) return;
+    const arr = order.slice();
+    const tmp = arr[idx];
+    arr[idx] = arr[j];
+    arr[j] = tmp;
+    onChange(arr);
+  };
+  const label = (c: "A" | "E" | "T") =>
+    c === "A" ? t("announcer") : c === "E" ? t("ego") : t("threeStar");
+  return (
+    <div className="text-sm space-y-1">
+      <div className="opacity-70">{t("exchangeOrder")}</div>
+      <div className="flex flex-wrap gap-2">
+        {order.map((c, i) => (
+          <div key={c} className="flex items-center gap-1">
+            <Chip>{label(c)}</Chip>
+            <div className="flex flex-col">
+              <button
+                className="px-1 py-0.5 rounded border border-zinc-200 dark:border-zinc-800"
+                onClick={() => move(i, -1)}
+                aria-label="left"
+                title="left"
+              >
+                ←
+              </button>
+              <button
+                className="px-1 py-0.5 rounded border border-zinc-200 dark:border-zinc-800"
+                onClick={() => move(i, 1)}
+                aria-label="right"
+                title="right"
+              >
+                →
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPanel({
   settings,
   setSettings,
@@ -11,6 +87,7 @@ export default function SettingsPanel({
   setTargets,
   resources,
   setResources,
+  pityAlloc,
 }: {
   settings: GlobalSettings;
   setSettings: (s: GlobalSettings) => void;
@@ -18,6 +95,7 @@ export default function SettingsPanel({
   setTargets: (t: Targets) => void;
   resources: Resources;
   setResources: (r: Resources) => void;
+  pityAlloc: ("A" | "E" | "T")[];
 }) {
   const { t } = useTranslation();
   const [syncDesired, setSyncDesired] = useState(false);
@@ -107,6 +185,14 @@ export default function SettingsPanel({
             <span>{t("autoRecommend")}</span>
           </label>
         </div>
+        {settings.autoRecommend ? (
+          <AutoPlanView pityAlloc={pityAlloc} />
+        ) : (
+          <PriorityEditor
+            order={(settings.exchangePriority as ("A" | "E" | "T")[]) || ["E", "T", "A"]}
+            onChange={(order) => setSettings({ ...settings, exchangePriority: order })}
+          />
+        )}
       </section>
     </div>
   );
