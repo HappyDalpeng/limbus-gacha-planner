@@ -23,6 +23,8 @@
   "enterActualPulls": "実際の達成回数",
   "yourPercentile": "上位 {{top}}%",
   "saveImage": "カード画像を保存",
+  "showCard": "カードを表示",
+  "editAgain": "再入力",
   "beforeAfter": "天井別 Before/After",
   "pity": "天井",
   "before": "前",

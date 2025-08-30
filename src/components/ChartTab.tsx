@@ -214,7 +214,6 @@ export default function ChartTab({
           </details>
         </div>
       </div>
-
     </div>
   );
 }
