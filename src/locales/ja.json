@@ -1,5 +1,5 @@
 {
-  "title": "ガチャ確率プランナー",
+  "title": "リンバス • ガチャ • プランナー",
   "settings": "設定",
   "collapse": "折りたたむ",
   "expand": "展開",
@@ -20,6 +20,7 @@
   "tabs.perc": "運カード",
   "probAtResources": "現在{{n}}回での達成確率",
   "n90Line": "{{q}}% ライン: {{n}}回",
+  "nQLineWithInput": "達成 <0/>% 地点: {{n}}回",
   "enterActualPulls": "実際の達成回数",
   "yourPercentile": "上位 {{top}}%",
   "saveImage": "カード画像を保存",
@@ -49,10 +50,13 @@
   "tooltip.success": "達成確率",
   "tooltip.simulation": "シミュレーション",
   "showMC": "シミュレーションを表示",
+  "showMCAlt": "サンプリング推定線を表示",
   "mcMeta": "MC: サンプル {{s}} × ポイント {{k}}",
   "mcPityReflected": "天井交換を反映",
-  "rerunMC": "シミュレーションを再実行",
+  "rerunMC": "サンプリング推定を再計算",
   "runSingleSim": "単一シミュレーション",
+  "runWithCurrentResources": "現在の所持でガチャをシミュレーション",
+  "clearSingleSim": "ラックラインを消去",
   "sim.progress": "進捗",
   "sim.forward": "残り達成確率"
 }

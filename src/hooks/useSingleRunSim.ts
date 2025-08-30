@@ -158,5 +158,13 @@ export function useSingleRunSim({
     rafRef.current = null;
   }
 
-  return { running, simData, events, start, stop } as const;
+  function clear() {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setRunning(false);
+    setSimData([]);
+    setEvents([]);
+  }
+
+  return { running, simData, events, start, stop, clear } as const;
 }

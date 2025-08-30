@@ -1,5 +1,5 @@
 {
-  "title": "가챠 확률 플래너",
+  "title": "림버스 가챠 플래너",
   "settings": "기본 설정",
   "collapse": "접기",
   "expand": "펼치기",
@@ -20,6 +20,7 @@
   "tabs.perc": "운 카드",
   "probAtResources": "보유 재화로 {{n}}회 뽑기 시 달성 확률",
   "n90Line": "달성 {{q}}% 지점: {{n}}회",
+  "nQLineWithInput": "달성 <0/> % 지점: {{n}}회",
   "enterActualPulls": "실제 달성 뽑기 횟수",
   "yourPercentile": "상위 {{top}}%",
   "saveImage": "카드 이미지 저장",
@@ -49,10 +50,13 @@
   "tooltip.success": "달성 확률",
   "tooltip.simulation": "시뮬레이션",
   "showMC": "시뮬레이션 보조선 표시",
+  "showMCAlt": "샘플링 추정선 보기",
   "mcMeta": "MC: 샘플 {{s}} × 포인트 {{k}}",
   "mcPityReflected": "천장 교환 반영",
-  "rerunMC": "시뮬레이션 다시 실행",
+  "rerunMC": "샘플링 추정선 재계산",
   "runSingleSim": "1회 시뮬레이션",
+  "runWithCurrentResources": "현재 보유 재화로 뽑기 시뮬레이션",
+  "clearSingleSim": "Luck 라인 지우기",
   "sim.progress": "진행률",
   "sim.forward": "남은 성공확률"
 }

@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import TooltipContent from "./TooltipContent";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 
 type Datum = { n: number; F: number };
 
@@ -28,6 +29,10 @@ export default function ProbabilityChart({
   isRefLabelClose,
   colors,
   showMC,
+  resY,
+  resLabel,
+  qY,
+  qLabel,
 }: {
   data: Datum[];
   mcData: { n: number; MC: number }[];
@@ -43,11 +48,16 @@ export default function ProbabilityChart({
   isRefLabelClose: boolean;
   colors: Record<string, string>;
   showMC: boolean;
+  resY: number;
+  resLabel: string;
+  qY: number;
+  qLabel: string;
 }) {
   const { t } = useTranslation();
 
   function EventDot(props: any) {
     const { cx, cy, payload, index } = props;
+    const [hovered, setHovered] = useState(false);
     const kind: "A" | "E" | "T" | undefined = payload?.kind;
     const source: "draw" | "pity" | undefined = payload?.source;
     if (typeof cx !== "number" || typeof cy !== "number" || !kind) return null;
@@ -58,9 +68,9 @@ export default function ProbabilityChart({
     const w = 16 + String(label).length * 6;
     const h = 16;
     return (
-      <g pointerEvents="none">
+      <g onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
         <circle cx={cx} cy={cy} r={5} fill={color} stroke="#111827" strokeWidth={1.5} />
-        {isLatest && (
+        {(isLatest || hovered) && (
           <g transform={`translate(${cx + 8}, ${cy - h - 4})`}>
             <rect width={w} height={h} rx={4} ry={4} fill="rgba(17,24,39,0.85)" />
             <text x={8} y={12} fontSize={10} fill="#fff">
@@ -68,6 +78,41 @@ export default function ProbabilityChart({
             </text>
           </g>
         )}
+      </g>
+    );
+  }
+
+  function BubbleDot({
+    cx,
+    cy,
+    color,
+    label,
+    align = "center",
+  }: {
+    cx?: number;
+    cy?: number;
+    color: string;
+    label: string;
+    align?: "center" | "left" | "right";
+  }) {
+    if (typeof cx !== "number" || typeof cy !== "number") return null;
+    const padX = 6;
+    const padY = 3;
+    const textW = 6 * String(label).length;
+    const w = padX * 2 + textW;
+    const h = 16;
+    let tx = cx - w / 2;
+    if (align === "left") tx = cx - w - 8;
+    if (align === "right") tx = cx + 8;
+    return (
+      <g pointerEvents="none">
+        <circle cx={cx} cy={cy} r={4} fill={color} />
+        <g transform={`translate(${tx}, ${cy - h - 8})`}>
+          <rect width={w} height={h} rx={4} ry={4} fill="rgba(17,24,39,0.85)" />
+          <text x={padX} y={12} fontSize={10} fill="#fff">
+            {label}
+          </text>
+        </g>
       </g>
     );
   }
@@ -140,23 +185,34 @@ export default function ProbabilityChart({
           x={clampedTotal}
           stroke={colors.resources}
           strokeDasharray="6 4"
-          label={
-            isRefLabelClose
-              ? { value: `${total}`, position: "insideTop", fill: colors.resources, dy: 6 }
-              : { value: `${total}`, position: "top", fill: colors.resources, dy: 0 }
-          }
+          label={(() => {
+            const toRight = clampedTotal < qN; // resource line is left of q line
+            return {
+              value: `${total}`,
+              position: "top",
+              fill: colors.resources,
+              dy: 0,
+              dx: isRefLabelClose ? (toRight ? -10 : 10) : 0,
+              fontSize: 14,
+            } as any;
+          })()}
         />
         <ReferenceLine
           key={`qn-${qN}`}
           x={qN}
           stroke={colors.quantile}
           strokeDasharray="6 4"
-          label={{
-            value: `${Math.round(q * 100)}%`,
-            position: "top",
-            fill: colors.quantile,
-            dy: 0,
-          }}
+          label={(() => {
+            const toRight = clampedTotal < qN; // resource line is left of q line
+            return {
+              value: `${qN}`,
+              position: "top",
+              fill: colors.quantile,
+              dy: 0,
+              dx: isRefLabelClose ? (toRight ? 10 : -10) : 0,
+              fontSize: 14,
+            } as any;
+          })()}
         />
         {pityBoundaries.map((n) => (
           <ReferenceLine
@@ -168,6 +224,36 @@ export default function ProbabilityChart({
             strokeDasharray="2 4"
           />
         ))}
+
+        {/* Intersection dots with tooltip-like labels */}
+        <Line
+          type="linear"
+          data={[{ n: clampedTotal, y: resY }] as any}
+          dataKey="y"
+          stroke="none"
+          dot={
+            <BubbleDot
+              color={colors.resources}
+              label={resLabel}
+              align={isRefLabelClose ? "left" : "center"}
+            />
+          }
+          isAnimationActive={false}
+        />
+        <Line
+          type="linear"
+          data={[{ n: qN, y: qY }] as any}
+          dataKey="y"
+          stroke="none"
+          dot={
+            <BubbleDot
+              color={colors.quantile}
+              label={qLabel}
+              align={isRefLabelClose ? "right" : "center"}
+            />
+          }
+          isAnimationActive={false}
+        />
       </ComposedChart>
     </ResponsiveContainer>
   );

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import NumberField from "./NumberField";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   Targets,
   GlobalSettings,
@@ -69,6 +68,7 @@ export default function ChartTab({
     events: eventData,
     start: startSim,
     stop: stopSim,
+    clear: clearSim,
   } = useSingleRunSim({
     total,
     maxN,
@@ -133,6 +133,10 @@ export default function ChartTab({
     () => cumulativeSuccess(total, settings, targets, pityAlloc),
     [total, settings, targets, pityAlloc],
   );
+  const probAtClampedTotal = useMemo(
+    () => cumulativeSuccess(clampedTotal, settings, targets, pityAlloc),
+    [clampedTotal, settings, targets, pityAlloc],
+  );
   const rows = useMemo(() => {
     return beforeAfterTable(settings, targets, pityAlloc, maxN);
   }, [settings, targets, pityAlloc, maxN]);
@@ -164,17 +168,25 @@ export default function ChartTab({
           <div>
             {t("probAtResources", { n: total })}: <b>{formatPercentValue(probAtResources, 2)}%</b>
           </div>
-          <div>· {t("n90Line", { q: Math.round(q * 100), n: qN })}</div>
-          <label className="ml-auto flex items-center gap-2">
-            <span>%</span>
-            <NumberField
-              className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 py-1"
-              value={Math.round(q * 100)}
-              onChange={(num) => setQ(Math.min(0.99, Math.max(0.01, (num || 0) / 100)))}
-              min={1}
-              max={99}
-            />
-          </label>
+          <div className="flex items-center">
+            <span className="mr-2" aria-hidden>
+              ·
+            </span>
+            <Trans i18nKey="nQLineWithInput" values={{ n: qN }}>
+              <input
+                type="number"
+                min={1}
+                max={99}
+                className="mx-1 w-16 bg-transparent text-center border-0 border-b-2 border-zinc-300 dark:border-zinc-600 py-0.5 leading-none focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-400"
+                value={Math.round(q * 100)}
+                onChange={(e) => {
+                  const v = e.currentTarget.valueAsNumber;
+                  const pct = Number.isFinite(v) ? Math.max(1, Math.min(99, Math.round(v))) : 1;
+                  setQ(pct / 100);
+                }}
+              />
+            </Trans>
+          </div>
         </div>
 
         <LegendInline
@@ -185,12 +197,45 @@ export default function ChartTab({
         />
 
         <div className="flex items-center justify-end mb-2 gap-2 text-xs">
-          <div className="flex items-center gap-1 opacity-80">
-            {t("sim.forward", "남은 성공확률")}
+
+          {/* 1회 시뮬레이션: 라벨 + 플레이 아이콘 버튼 */}
+          <div className="flex items-center gap-2">
+            <span>{t("runWithCurrentResources")}</span>
+            {(!simRunning && (simData.length > 0 || eventData.length > 0)) ? (
+              <button
+                className="px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800"
+                onClick={() => clearSim()}
+                title={t("clearSingleSim")}
+                aria-label={t("clearSingleSim")}
+              >
+                🗑
+              </button>
+            ) : (
+              <button
+                className={
+                  "px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 " +
+                  (simRunning ? "opacity-60 cursor-not-allowed" : "")
+                }
+                onClick={() => {
+                  if (simRunning) return;
+                  startSim();
+                }}
+                disabled={simRunning}
+                title={t("runSingleSim")}
+                aria-label={t("runSingleSim")}
+              >
+                ▶
+              </button>
+            )}
           </div>
+
+          {/* Divider */}
+          <span className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 mx-1" aria-hidden />
+
+          {/* 시뮬레이션 보조선 토글 + 재실행 */}
           <label className="flex items-center gap-1 opacity-80">
             <input type="checkbox" checked={showMC} onChange={(e) => setShowMC(e.target.checked)} />
-            <span>{t("showMC")}</span>
+            <span>{t("showMCAlt")}</span>
           </label>
           <button
             className={
@@ -202,19 +247,6 @@ export default function ChartTab({
             aria-hidden={!showMC}
           >
             ↻
-          </button>
-          <button
-            className={
-              "px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 " +
-              (simRunning ? "opacity-60 cursor-not-allowed" : "")
-            }
-            onClick={() => {
-              if (simRunning) return;
-              startSim();
-            }}
-            disabled={simRunning}
-          >
-            {t("runSingleSim")}
           </button>
         </div>
 
@@ -234,6 +266,10 @@ export default function ChartTab({
             isRefLabelClose={isRefLabelClose}
             colors={{ ...COLOR_FALLBACK, ...themeColors } as any}
             showMC={showMC}
+            resLabel={`${formatPercentValue(probAtClampedTotal, 2)}%`}
+            resY={probAtClampedTotal}
+            qLabel={`${formatPercentValue(q, 2)}%`}
+            qY={q}
           />
         </div>
         {/* MC meta */}

@@ -1,5 +1,5 @@
 {
-  "title": "Gacha Probability Planner",
+  "title": "Limbus Gacha Planner",
   "settings": "Settings",
   "collapse": "Collapse",
   "expand": "Expand",
@@ -20,6 +20,7 @@
   "tabs.perc": "Luck Card",
   "probAtResources": "Success probability at current {{n}} pulls",
   "n90Line": "{{q}}% line at {{n}} pulls",
+  "nQLineWithInput": "At <0/>%: {{n}} pulls",
   "enterActualPulls": "Your actual completion pulls",
   "yourPercentile": "Top {{top}}%",
   "saveImage": "Save card image",
@@ -49,10 +50,13 @@
   "tooltip.success": "Success chance",
   "tooltip.simulation": "Simulation",
   "showMC": "Show simulation",
+  "showMCAlt": "Show sampling estimate",
   "mcMeta": "MC: {{s}} samples × {{k}} points",
   "mcPityReflected": "Pity exchange reflected",
-  "rerunMC": "Re-run simulation",
+  "rerunMC": "Recompute sampling estimate",
   "runSingleSim": "Run single simulation",
+  "runWithCurrentResources": "Simulate pulls with current resources",
+  "clearSingleSim": "Clear luck line",
   "sim.progress": "Progress",
   "sim.forward": "Forward chance"
 }
