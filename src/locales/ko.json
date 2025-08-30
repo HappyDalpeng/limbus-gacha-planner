@@ -50,5 +50,6 @@
   "tooltip.simulation": "시뮬레이션",
   "showMC": "시뮬레이션 보조선 표시",
   "mcMeta": "MC: 샘플 {{s}} × 포인트 {{k}}",
-  "mcPityReflected": "천장 교환 반영"
+  "mcPityReflected": "천장 교환 반영",
+  "rerunMC": "시뮬레이션 다시 실행"
 }

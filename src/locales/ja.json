@@ -50,5 +50,6 @@
   "tooltip.simulation": "シミュレーション",
   "showMC": "シミュレーションを表示",
   "mcMeta": "MC: サンプル {{s}} × ポイント {{k}}",
-  "mcPityReflected": "天井交換を反映"
+  "mcPityReflected": "天井交換を反映",
+  "rerunMC": "シミュレーションを再実行"
 }

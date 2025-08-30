@@ -244,7 +244,6 @@ export function monteCarloSuccess(
   targets: Targets,
   pityAlloc: PityAlloc,
   samples = 200,
-  seed = 0,
 ) {
   if (n <= 0)
     return targets.A.desired <= 0 && targets.E.desired <= 0 && targets.T.desired <= 0 ? 1 : 0;
@@ -265,13 +264,6 @@ export function monteCarloSuccess(
   const ratioA = ratio(targets.A.desired, targets.A.pickup);
   const ratioT = ratio(targets.T.desired, targets.T.pickup);
 
-  // simple LCG for deterministic PRNG
-  let s = seed >>> 0 || 1;
-  const rnd = () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return (s >>> 0) / 4294967296;
-  };
-
   let successCount = 0;
   for (let s = 0; s < samples; s++) {
     let mA = Math.max(0, targets.A.desired - pityCounts.A);
@@ -288,20 +280,20 @@ export function monteCarloSuccess(
     }
 
     for (let draw = 0; draw < n; draw++) {
-      const u = rnd();
+      const u = Math.random();
       if (u < pA_pick) {
-        if (mA > 0 && rnd() < ratioA) mA--;
+        if (mA > 0 && Math.random() < ratioA) mA--;
       } else if (u < pA_pick + pE_pick) {
         if (remPickupE > 0) {
           const pWantE = remPickupE > 0 ? remDesiredE / remPickupE : 0;
-          if (mE > 0 && rnd() < pWantE) {
+          if (mE > 0 && Math.random() < pWantE) {
             mE--;
             if (remDesiredE > 0) remDesiredE--;
           }
           if (remPickupE > 0) remPickupE--;
         }
       } else if (u < pA_pick + pE_pick + pT_pick) {
-        if (mT > 0 && rnd() < ratioT) mT--;
+        if (mT > 0 && Math.random() < ratioT) mT--;
       } else {
         // other outcome (non-target categories)
       }

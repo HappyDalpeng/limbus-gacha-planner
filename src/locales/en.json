@@ -50,5 +50,6 @@
   "tooltip.simulation": "Simulation",
   "showMC": "Show simulation",
   "mcMeta": "MC: {{s}} samples × {{k}} points",
-  "mcPityReflected": "Pity exchange reflected"
+  "mcPityReflected": "Pity exchange reflected",
+  "rerunMC": "Re-run simulation"
 }

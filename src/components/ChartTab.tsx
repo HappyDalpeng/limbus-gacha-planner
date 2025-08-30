@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import NumberField from "./NumberField";
 import { useTranslation } from "react-i18next";
 import {
@@ -59,6 +59,7 @@ export default function ChartTab({
   // Measure chart width to pick readable tick spacing
   const [containerRef, chartWidth] = useElementWidth<HTMLDivElement>();
   const [showMC, setShowMC] = useState(false);
+  const [mcData, setMcData] = useState<{ n: number; MC: number }[]>([]);
 
   const data = useMemo(() => {
     const arr: Datum[] = [];
@@ -80,44 +81,32 @@ export default function ChartTab({
     return arr;
   }, [maxN, targets, settings, pityAlloc]);
 
-  // Monte Carlo auxiliary curve: ticks + pity boundaries
-  const mcData = useMemo(() => {
-    if (!showMC) return [] as { n: number; MC: number }[];
+  // Monte Carlo auxiliary generation (run on demand)
+  const runMonteCarlo = () => {
     const S = 200; // samples per point
-    const set = new Set<number>();
-    set.add(0);
-    set.add(maxN);
-    // include chart ticks
+    const indices = new Set<number>();
+    indices.add(0);
+    indices.add(maxN);
     computeXTicks(maxN, chartWidth).forEach((x) => {
-      if (x >= 0 && x <= maxN) set.add(x);
+      if (x >= 0 && x <= maxN) indices.add(x);
     });
-    // include pity boundaries before/after
     const R = Math.floor(maxN / PITY_STEP);
     for (let r = 1; r <= R; r++) {
       const before = r * PITY_STEP - 1;
       const after = r * PITY_STEP;
-      if (before >= 0 && before <= maxN) set.add(before);
-      if (after >= 0 && after <= maxN) set.add(after);
+      if (before >= 0 && before <= maxN) indices.add(before);
+      if (after >= 0 && after <= maxN) indices.add(after);
     }
-    const pts = Array.from(set).sort((a, b) => a - b);
-    // derive a stable seed base from inputs (simple mixing)
-    const seedBase =
-      (maxN * 17 +
-        targets.A.desired * 131 +
-        targets.E.desired * 137 +
-        targets.T.desired * 139 +
-        pityAlloc.length * 149) >>>
-      0;
-    const arr = pts.map((n, i) => ({
-      n,
-      MC: monteCarloSuccess(n, settings, targets, pityAlloc, S, seedBase + i * 9973),
-    }));
-    // monotone correction (non-decreasing)
-    for (let i = 1; i < arr.length; i++) {
-      if (arr[i].MC < arr[i - 1].MC) arr[i].MC = arr[i - 1].MC;
-    }
-    return arr;
-  }, [showMC, maxN, chartWidth, settings, targets, pityAlloc]);
+    const pts = Array.from(indices).sort((a, b) => a - b);
+    const arr = pts.map((n) => ({ n, MC: monteCarloSuccess(n, settings, targets, pityAlloc, S) }));
+    for (let i = 1; i < arr.length; i++) if (arr[i].MC < arr[i - 1].MC) arr[i].MC = arr[i - 1].MC;
+    setMcData(arr);
+  };
+
+  // First toggle ON → run once; OFF preserves last results
+  useEffect(() => {
+    if (showMC && mcData.length === 0) runMonteCarlo();
+  }, [showMC]);
 
   const xTicks = useMemo(() => computeXTicks(maxN, chartWidth), [maxN, chartWidth]);
 
@@ -233,11 +222,22 @@ export default function ChartTab({
             <input type="checkbox" checked={showMC} onChange={(e) => setShowMC(e.target.checked)} />
             <span>{t("showMC")}</span>
           </label>
+          <button
+            className={
+              "px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 transition-opacity " +
+              (showMC ? "opacity-100" : "opacity-0 pointer-events-none")
+            }
+            onClick={runMonteCarlo}
+            title={t("rerunMC")}
+            aria-hidden={!showMC}
+          >
+            ↻
+          </button>
         </div>
 
         <div className="h-80" ref={containerRef}>
           <ResponsiveContainer>
-            <LineChart data={data} margin={{ right: 24, bottom: 28, top: 24 }}>
+            <LineChart data={data} margin={{ right: 24, bottom: 12, top: 24 }}>
               <CartesianGrid stroke={COLOR.grid} strokeDasharray="2 2" />
               <XAxis
                 dataKey="n"
@@ -256,7 +256,7 @@ export default function ChartTab({
               />
               <Tooltip content={<TooltipContent />} />
               <Line type="monotone" dataKey="F" dot={false} strokeWidth={2} />
-              {showMC && (
+              {showMC && mcData.length > 0 && (
                 <Line
                   type="monotone"
                   data={mcData as any}
@@ -303,11 +303,15 @@ export default function ChartTab({
             </LineChart>
           </ResponsiveContainer>
         </div>
-        {showMC && (
-          <div className="text-right text-xs opacity-70 mt-1">
-            {t("mcMeta", { s: 200, k: mcData.length })}
-          </div>
-        )}
+        <div
+          className={
+            "text-right text-xs mt-1 transition-opacity " +
+            (showMC && mcData.length > 0 ? "opacity-70" : "opacity-0 pointer-events-none select-none")
+          }
+          aria-hidden={!(showMC && mcData.length > 0)}
+        >
+          {t("mcMeta", { s: 200, k: mcData.length })}
+        </div>
         <div className="border-t border-zinc-200 dark:border-zinc-800 mt-3 pt-3">
           <details>
             <summary className="cursor-pointer text-sm">{t("beforeAfter")}</summary>
