@@ -237,6 +237,84 @@ export function cumulativeSuccess(
   return tailA * tailE * tailT;
 }
 
+// Monte Carlo estimate of F(n) without changing the analytic model.
+export function monteCarloSuccess(
+  n: number,
+  settings: GlobalSettings,
+  targets: Targets,
+  pityAlloc: PityAlloc,
+  samples = 200,
+  seed = 0,
+) {
+  if (n <= 0)
+    return targets.A.desired <= 0 && targets.E.desired <= 0 && targets.T.desired <= 0 ? 1 : 0;
+
+  const r = Math.floor(n / PITY_STEP);
+  const pityCounts = { A: 0, E: 0, T: 0 } as Record<"A" | "E" | "T", number>;
+  for (let i = 0; i < r && i < pityAlloc.length; i++) pityCounts[pityAlloc[i]]++;
+
+  const hasAnnouncer = targets.A.pickup > 0;
+  const egoAvailable = targets.E.pickup > 0 || !settings.ownAllExistingPoolEgo;
+  const egoHalf = targets.E.pickup > 0 && settings.ownAllExistingPoolEgo ? 1 : 0.5;
+  const base = baseCategoryProbs(hasAnnouncer, egoAvailable);
+
+  const pA_pick = base.pA * 0.5;
+  const pE_pick = base.pE * egoHalf;
+  const pT_pick = base.p3 * 0.5;
+
+  const ratioA = ratio(targets.A.desired, targets.A.pickup);
+  const ratioT = ratio(targets.T.desired, targets.T.pickup);
+
+  // simple LCG for deterministic PRNG
+  let s = seed >>> 0 || 1;
+  const rnd = () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return (s >>> 0) / 4294967296;
+  };
+
+  let successCount = 0;
+  for (let s = 0; s < samples; s++) {
+    let mA = Math.max(0, targets.A.desired - pityCounts.A);
+    let mE = Math.max(0, targets.E.desired - pityCounts.E);
+    let mT = Math.max(0, targets.T.desired - pityCounts.T);
+
+    // E.G.O remaining unique counts for DP-like behavior
+    let remPickupE = Math.max(0, targets.E.pickup);
+    let remDesiredE = Math.max(0, targets.E.desired);
+
+    if (mA === 0 && mE === 0 && mT === 0) {
+      successCount++;
+      continue;
+    }
+
+    for (let draw = 0; draw < n; draw++) {
+      const u = rnd();
+      if (u < pA_pick) {
+        if (mA > 0 && rnd() < ratioA) mA--;
+      } else if (u < pA_pick + pE_pick) {
+        if (remPickupE > 0) {
+          const pWantE = remPickupE > 0 ? remDesiredE / remPickupE : 0;
+          if (mE > 0 && rnd() < pWantE) {
+            mE--;
+            if (remDesiredE > 0) remDesiredE--;
+          }
+          if (remPickupE > 0) remPickupE--;
+        }
+      } else if (u < pA_pick + pE_pick + pT_pick) {
+        if (mT > 0 && rnd() < ratioT) mT--;
+      } else {
+        // other outcome (non-target categories)
+      }
+
+      if (mA === 0 && mE === 0 && mT === 0) {
+        successCount++;
+        break;
+      }
+    }
+  }
+  return successCount / Math.max(1, samples);
+}
+
 export function computeGreedyPityAlloc(
   Nmax: number,
   settings: GlobalSettings,

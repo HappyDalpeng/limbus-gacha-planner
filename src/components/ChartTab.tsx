@@ -12,6 +12,7 @@ import {
   autoMaxDraws,
   PITY_STEP,
   Resources,
+  monteCarloSuccess,
 } from "@/lib/prob";
 import { useElementWidth } from "@/lib/hooks";
 import { computeXTicks } from "@/lib/chart";
@@ -57,6 +58,7 @@ export default function ChartTab({
 
   // Measure chart width to pick readable tick spacing
   const [containerRef, chartWidth] = useElementWidth<HTMLDivElement>();
+  const [showMC, setShowMC] = useState(false);
 
   const data = useMemo(() => {
     const arr: Datum[] = [];
@@ -77,6 +79,45 @@ export default function ChartTab({
     arr.sort((a, b) => a.n - b.n);
     return arr;
   }, [maxN, targets, settings, pityAlloc]);
+
+  // Monte Carlo auxiliary curve: ticks + pity boundaries
+  const mcData = useMemo(() => {
+    if (!showMC) return [] as { n: number; MC: number }[];
+    const S = 200; // samples per point
+    const set = new Set<number>();
+    set.add(0);
+    set.add(maxN);
+    // include chart ticks
+    computeXTicks(maxN, chartWidth).forEach((x) => {
+      if (x >= 0 && x <= maxN) set.add(x);
+    });
+    // include pity boundaries before/after
+    const R = Math.floor(maxN / PITY_STEP);
+    for (let r = 1; r <= R; r++) {
+      const before = r * PITY_STEP - 1;
+      const after = r * PITY_STEP;
+      if (before >= 0 && before <= maxN) set.add(before);
+      if (after >= 0 && after <= maxN) set.add(after);
+    }
+    const pts = Array.from(set).sort((a, b) => a - b);
+    // derive a stable seed base from inputs (simple mixing)
+    const seedBase =
+      (maxN * 17 +
+        targets.A.desired * 131 +
+        targets.E.desired * 137 +
+        targets.T.desired * 139 +
+        pityAlloc.length * 149) >>>
+      0;
+    const arr = pts.map((n, i) => ({
+      n,
+      MC: monteCarloSuccess(n, settings, targets, pityAlloc, S, seedBase + i * 9973),
+    }));
+    // monotone correction (non-decreasing)
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i].MC < arr[i - 1].MC) arr[i].MC = arr[i - 1].MC;
+    }
+    return arr;
+  }, [showMC, maxN, chartWidth, settings, targets, pityAlloc]);
 
   const xTicks = useMemo(() => computeXTicks(maxN, chartWidth), [maxN, chartWidth]);
 
@@ -104,6 +145,64 @@ export default function ChartTab({
     [maxN],
   );
 
+  function TooltipContent({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: any[];
+    label?: any;
+  }) {
+    if (!active || !payload || !payload.length) return null;
+    const toNum = (x: any) => (typeof x === "number" ? x : Number(x));
+    const nVal = toNum(label);
+    const itemF = payload.find((p) => p && (p.dataKey === "F" || p.name === "F"));
+    const Fv = typeof itemF?.value === "number" ? itemF.value : undefined;
+    const itemMC = payload.find((p) => p && (p.dataKey === "MC" || p.name === "MC"));
+    let MCv: number | undefined = undefined;
+    if (showMC) {
+      if (typeof itemMC?.value === "number") MCv = itemMC.value as number;
+      else if (mcData.length >= 2) {
+        // linear interpolation between nearest MC samples
+        let i = 0;
+        while (i < mcData.length && mcData[i].n < nVal) i++;
+        if (i === 0) MCv = mcData[0].MC;
+        else if (i >= mcData.length) MCv = mcData[mcData.length - 1].MC;
+        else {
+          const a = mcData[i - 1];
+          const b = mcData[i];
+          const t = b.n === a.n ? 0 : (nVal - a.n) / (b.n - a.n);
+          MCv = a.MC + (b.MC - a.MC) * t;
+        }
+      }
+    }
+    return (
+      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs">
+        <div className="opacity-70 mb-1">
+          {t("tooltip.pulls")}: <b>{label}</b>
+        </div>
+        {typeof Fv === "number" && (
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block w-2 h-2 rounded-sm"
+              style={{ background: "currentColor" }}
+            />
+            <span>{t("tooltip.success")}: </span>
+            <b>{formatPercentValue(Fv, 2)}%</b>
+          </div>
+        )}
+        {showMC && typeof MCv === "number" && (
+          <div className="flex items-center gap-2 mt-1 opacity-90">
+            <span className="inline-block w-2 h-2 rounded-sm" style={{ background: "#7c3aed" }} />
+            <span>{t("tooltip.simulation")}: </span>
+            <b>{formatPercentValue(MCv, 2)}%</b>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
@@ -129,6 +228,13 @@ export default function ChartTab({
           quantileLabel={t("legend.quantile", { q: Math.round(q * 100) })}
         />
 
+        <div className="flex items-center justify-end mb-2 gap-2 text-xs">
+          <label className="flex items-center gap-1 opacity-80">
+            <input type="checkbox" checked={showMC} onChange={(e) => setShowMC(e.target.checked)} />
+            <span>{t("showMC")}</span>
+          </label>
+        </div>
+
         <div className="h-80" ref={containerRef}>
           <ResponsiveContainer>
             <LineChart data={data} margin={{ right: 24, bottom: 28, top: 24 }}>
@@ -148,10 +254,19 @@ export default function ChartTab({
                 domain={[0, 1]}
                 ticks={[0, 0.25, 0.5, 0.75, 1]}
               />
-              <Tooltip
-                formatter={(value) => [`${formatPercentValue(Number(value), 2)}%`, "F(n)"]}
-              />
+              <Tooltip content={<TooltipContent />} />
               <Line type="monotone" dataKey="F" dot={false} strokeWidth={2} />
+              {showMC && (
+                <Line
+                  type="monotone"
+                  data={mcData as any}
+                  dataKey="MC"
+                  name="MC"
+                  stroke="#7c3aed" /* violet-600 */
+                  strokeDasharray="4 2"
+                  dot={false}
+                />
+              )}
               <ReferenceLine
                 key={`res-${clampedTotal}`}
                 x={clampedTotal}
@@ -188,6 +303,11 @@ export default function ChartTab({
             </LineChart>
           </ResponsiveContainer>
         </div>
+        {showMC && (
+          <div className="text-right text-xs opacity-70 mt-1">
+            {t("mcMeta", { s: 200, k: mcData.length })}
+          </div>
+        )}
         <div className="border-t border-zinc-200 dark:border-zinc-800 mt-3 pt-3">
           <details>
             <summary className="cursor-pointer text-sm">{t("beforeAfter")}</summary>

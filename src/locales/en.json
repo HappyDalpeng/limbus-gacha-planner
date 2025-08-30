@@ -44,5 +44,11 @@
   "autoArrange": "Suggest order",
   "dragToReorder": "Drag to reorder",
   "disclaimer.line1": "This website is an unofficial fan-made planner for the game Limbus Company and is not affiliated with ProjectMoon.",
-  "disclaimer.line2": "All game artwork, information, and assets are the property of their respective copyright holders."
+  "disclaimer.line2": "All game artwork, information, and assets are the property of their respective copyright holders.",
+  "tooltip.pulls": "Pulls",
+  "tooltip.success": "Success chance",
+  "tooltip.simulation": "Simulation",
+  "showMC": "Show simulation",
+  "mcMeta": "MC: {{s}} samples × {{k}} points",
+  "mcPityReflected": "Pity exchange reflected"
 }

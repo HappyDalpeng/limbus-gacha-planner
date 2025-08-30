@@ -44,5 +44,11 @@
   "autoArrange": "순서 추천",
   "dragToReorder": "드래그하여 순서 변경",
   "disclaimer.line1": "본 웹페이지는 게임 림버스 컴퍼니의 비공식 팬메이드 플래너이며, 프로젝트문과 아무런 관련이 없습니다.",
-  "disclaimer.line2": "모든 게임 아트워크, 정보, 애셋의 권리와 저작권은 해당 저작권자의 소유입니다."
+  "disclaimer.line2": "모든 게임 아트워크, 정보, 애셋의 권리와 저작권은 해당 저작권자의 소유입니다.",
+  "tooltip.pulls": "뽑기 횟수",
+  "tooltip.success": "달성 확률",
+  "tooltip.simulation": "시뮬레이션",
+  "showMC": "시뮬레이션 보조선 표시",
+  "mcMeta": "MC: 샘플 {{s}} × 포인트 {{k}}",
+  "mcPityReflected": "천장 교환 반영"
 }

@@ -44,5 +44,11 @@
   "autoArrange": "順序を提案",
   "dragToReorder": "ドラッグで並べ替え",
   "disclaimer.line1": "本サイトはゲーム『Limbus Company』の非公式ファンメイド・プランナーであり、ProjectMoon とは一切関係ありません。",
-  "disclaimer.line2": "ゲーム内のアートワーク・情報・アセットの権利および著作権は、それぞれの権利者に帰属します。"
+  "disclaimer.line2": "ゲーム内のアートワーク・情報・アセットの権利および著作権は、それぞれの権利者に帰属します。",
+  "tooltip.pulls": "回数",
+  "tooltip.success": "達成確率",
+  "tooltip.simulation": "シミュレーション",
+  "showMC": "シミュレーションを表示",
+  "mcMeta": "MC: サンプル {{s}} × ポイント {{k}}",
+  "mcPityReflected": "天井交換を反映"
 }
