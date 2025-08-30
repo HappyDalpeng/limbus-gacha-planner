@@ -127,6 +127,19 @@ export default function ChartTab({
     if (showMC && mcData.length === 0) runMonteCarlo();
   }, [showMC]);
 
+  // When core inputs change, clear any existing single-run simulation (Luck Line)
+  useEffect(() => {
+    if (simData.length > 0 || eventData.length > 0) clearSim();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targets, settings, pityAlloc, total, maxN]);
+
+  // When core inputs change, recompute MC if visible; otherwise clear stale MC data
+  useEffect(() => {
+    if (showMC) runMonteCarlo();
+    else if (mcData.length) setMcData([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMC, targets, settings, pityAlloc, maxN]);
+
   const xTicks = useMemo(() => computeXTicks(maxN, chartWidth), [maxN, chartWidth]);
 
   const qN = useMemo(() => {

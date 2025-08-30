@@ -207,7 +207,7 @@ function ProbabilityChart({
     <ResponsiveContainer debounce={100}>
       <ComposedChart data={data as any} margin={{ right: 24, bottom: 12, top: 24 }}>
         <CartesianGrid stroke={colors.grid} strokeDasharray="2 2" />
-        {(xAxisFrozen ?? xAxisBuilt)}
+        {xAxisFrozen ?? xAxisBuilt}
         <YAxis
           tickFormatter={(v) => (v * 100).toFixed(0) + "%"}
           domain={[0, 1]}
