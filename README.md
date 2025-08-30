@@ -1,5 +1,7 @@
 # 림버스 가챠 플래너
 
+[링크](https://happydalpeng.github.io/limbus-gacha-planner/)
+
 게임 림버스 컴퍼니의 픽업에 필요한 뽑기 수와 목표 달성 확률을 직관적으로 확인할 수 있는 웹 플래너입니다.
 
 ## 사용자 주의 사항
