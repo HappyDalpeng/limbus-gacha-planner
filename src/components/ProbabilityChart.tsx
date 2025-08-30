@@ -11,11 +11,26 @@ import {
 } from "recharts";
 import TooltipContent from "./TooltipContent";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 
 type Datum = { n: number; F: number };
 
-export default function ProbabilityChart({
+// Measure text width using a shared canvas for better accuracy than char-count heuristics
+let __measureCanvas: HTMLCanvasElement | null = null;
+let __measureCtx: CanvasRenderingContext2D | null = null;
+function measureTextWidth(text: string, fontSize = 10) {
+  if (typeof document === "undefined") return 6 * String(text).length; // SSR fallback
+  if (!__measureCanvas) __measureCanvas = document.createElement("canvas");
+  if (!__measureCtx) __measureCtx = __measureCanvas.getContext("2d");
+  const ctx = __measureCtx;
+  if (!ctx) return 6 * String(text).length;
+  const root = getComputedStyle(document.documentElement);
+  const family = root.fontFamily || "sans-serif";
+  ctx.font = `${fontSize}px ${family}`;
+  return Math.ceil(ctx.measureText(String(text)).width);
+}
+
+function ProbabilityChart({
   data,
   mcData,
   simData,
@@ -66,7 +81,8 @@ export default function ProbabilityChart({
     const isLatest = index === eventData.length - 1;
     const name = kind === "A" ? t("announcer") : kind === "E" ? t("ego") : t("threeStar");
     const label = source === "pity" ? `${name} · ${t("pity")}` : name;
-    const w = 16 + String(label).length * 6;
+    const textW = measureTextWidth(label, 10);
+    const w = 16 + textW; // 8px left + 8px right padding
     const h = 16;
     return (
       <g onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
@@ -99,7 +115,7 @@ export default function ProbabilityChart({
     if (typeof cx !== "number" || typeof cy !== "number") return null;
     const padX = 6;
     const padY = 3;
-    const textW = 6 * String(label).length;
+    const textW = measureTextWidth(label, 10);
     const w = padX * 2 + textW;
     const h = 16;
     let tx = cx - w / 2;
@@ -122,7 +138,7 @@ export default function ProbabilityChart({
     const cx = typeof viewBox?.cx === "number" ? viewBox.cx : viewBox?.x || 0;
     const cy = typeof viewBox?.cy === "number" ? viewBox.cy : viewBox?.y || 0;
     const padX = 6;
-    const textW = 6 * String(text).length;
+    const textW = measureTextWidth(text, 10);
     const w = padX * 2 + textW;
     const h = 16;
     let tx = cx - w / 2;
@@ -158,6 +174,12 @@ export default function ProbabilityChart({
     return arr;
   }, [showMC, mcData, maxN]);
 
+  // Memoize Tooltip content element to avoid new instance per render
+  const tooltipContent = useMemo(
+    () => <TooltipContent showMC={showMC} mcData={mcData} />,
+    [showMC, mcData],
+  );
+
   return (
     <ResponsiveContainer debounce={100}>
       <ComposedChart data={data as any} margin={{ right: 24, bottom: 12, top: 24 }}>
@@ -177,7 +199,7 @@ export default function ProbabilityChart({
           domain={[0, 1]}
           ticks={[0, 0.25, 0.5, 0.75, 1]}
         />
-        <Tooltip content={<TooltipContent showMC={showMC} mcData={mcData} />} />
+        <Tooltip content={tooltipContent} />
         {showMC && mcData.length > 0 && (
           <Line
             type="monotone"
@@ -285,3 +307,5 @@ export default function ProbabilityChart({
     </ResponsiveContainer>
   );
 }
+
+export default memo(ProbabilityChart);

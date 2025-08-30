@@ -53,6 +53,10 @@ export default function ChartTab({
   const { t } = useTranslation();
   const [q, setQ] = useState(0.9);
   const themeColors = useThemeColors(COLOR_FALLBACK as any);
+  const chartColors = useMemo(
+    () => ({ ...COLOR_FALLBACK, ...themeColors } as any),
+    [themeColors],
+  );
 
   const { total } = useMemo(() => resourcesToDraws(resources), [resources]);
   const maxN = useMemo(() => autoMaxDraws(targets), [targets]);
@@ -265,7 +269,7 @@ export default function ChartTab({
             q={q}
             pityBoundaries={pityBoundaries}
             isRefLabelClose={isRefLabelClose}
-            colors={{ ...COLOR_FALLBACK, ...themeColors } as any}
+            colors={chartColors as any}
             showMC={showMC}
             resLabel={`${formatPercentValue(probAtClampedTotal, 2)}%`}
             resY={probAtClampedTotal}
