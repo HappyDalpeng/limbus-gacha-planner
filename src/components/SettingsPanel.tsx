@@ -1,80 +1,139 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import type React from "react";
 import { Targets, GlobalSettings, Resources } from "@/lib/prob";
 import TargetInputs from "./TargetInputs";
 import ResourcesPanel from "./ResourcesPanel";
 
 function Chip({ children }: { children: string }) {
   return (
-    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 select-none whitespace-nowrap">
       {children}
     </span>
   );
 }
 
-function AutoPlanView({ pityAlloc }: { pityAlloc: ("A" | "E" | "T")[] }) {
-  const { t } = useTranslation();
-  if (!pityAlloc.length) return null;
-  const label = (c: "A" | "E" | "T") =>
-    c === "A" ? t("announcer") : c === "E" ? t("ego") : t("threeStar");
-  return (
-    <div className="text-sm space-y-1">
-      <div className="opacity-70">{t("exchangePlan")}</div>
-      <div className="flex flex-wrap gap-1">
-        {pityAlloc.map((c, i) => (
-          <Chip key={i}>{label(c)}</Chip>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PriorityEditor({
-  order,
-  onChange,
+function PlanEditor({
+  plan,
+  onReorder,
+  label,
+  onAutoArrange,
 }: {
-  order: ("A" | "E" | "T")[];
-  onChange: (o: ("A" | "E" | "T")[]) => void;
+  plan: ("A" | "E" | "T")[];
+  onReorder: (p: ("A" | "E" | "T")[]) => void;
+  label: (c: "A" | "E" | "T") => string;
+  onAutoArrange: () => void;
 }) {
   const { t } = useTranslation();
-  const move = (idx: number, dir: -1 | 1) => {
-    const j = idx + dir;
-    if (j < 0 || j >= order.length) return;
-    const arr = order.slice();
-    const tmp = arr[idx];
-    arr[idx] = arr[j];
-    arr[j] = tmp;
-    onChange(arr);
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+
+  const onDragStart = (e: React.DragEvent<HTMLSpanElement>, index: number) => {
+    e.dataTransfer.setData("text/plain", String(index));
+    setDragFrom(index);
   };
-  const label = (c: "A" | "E" | "T") =>
-    c === "A" ? t("announcer") : c === "E" ? t("ego") : t("threeStar");
+  const onDrop = (e: React.DragEvent<HTMLElement>, index: number) => {
+    const from = Number(e.dataTransfer.getData("text/plain"));
+    if (Number.isNaN(from)) return;
+    const arr = plan.slice();
+    const [item] = arr.splice(from, 1);
+    arr.splice(index, 0, item);
+    onReorder(arr);
+    setDragFrom(null);
+    setDragOver(null);
+  };
+  const onDragEnter = (_e: React.DragEvent<HTMLElement>, index: number) => {
+    setDragOver(index);
+  };
+  const onDragEnd = () => {
+    setDragFrom(null);
+    setDragOver(null);
+  };
+  const onChipDragOver = (e: React.DragEvent<HTMLSpanElement>, index: number) => {
+    // Allow drop and compute if pointer is near left/right edge of the chip
+    e.preventDefault();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const edge = 10; // px threshold near chip edges
+    if (x <= edge) {
+      setDragOver(index);
+    } else if (rect.width - x <= edge) {
+      setDragOver(index + 1);
+    } else {
+      // Not near a valid boundary; hide highlight
+      setDragOver(null);
+    }
+  };
+  const commitReorder = (toIndex: number | null) => {
+    if (dragFrom === null || toIndex === null) return;
+    const arr = plan.slice();
+    const [item] = arr.splice(dragFrom, 1);
+    const clamped = Math.max(0, Math.min(arr.length, toIndex));
+    arr.splice(clamped, 0, item);
+    onReorder(arr);
+    setDragFrom(null);
+    setDragOver(null);
+  };
+
   return (
-    <div className="text-sm space-y-1">
-      <div className="opacity-70">{t("exchangeOrder")}</div>
-      <div className="flex flex-wrap gap-2">
-        {order.map((c, i) => (
-          <div key={c} className="flex items-center gap-1">
-            <Chip>{label(c)}</Chip>
-            <div className="flex flex-col">
-              <button
-                className="px-1 py-0.5 rounded border border-zinc-200 dark:border-zinc-800"
-                onClick={() => move(i, -1)}
-                aria-label="left"
-                title="left"
-              >
-                ←
-              </button>
-              <button
-                className="px-1 py-0.5 rounded border border-zinc-200 dark:border-zinc-800"
-                onClick={() => move(i, 1)}
-                aria-label="right"
-                title="right"
-              >
-                →
-              </button>
-            </div>
-          </div>
+    <div
+      className="text-sm space-y-2"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        commitReorder(dragOver);
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <div className="opacity-70">{t("exchangePlan")}</div>
+        <button
+          className="ml-auto px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800"
+          onClick={onAutoArrange}
+        >
+          {t("autoArrange")}
+        </button>
+      </div>
+      <div className="flex flex-wrap items-center gap-0">
+        {plan.map((c, i) => (
+          <span key={`item-${i}`} className="flex items-center gap-0">
+            {/* drop zone before item (always rendered to keep spacing constant) */}
+            <span
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnter={(e) => onDragEnter(e, i)}
+              onDrop={(e) => onDrop(e, i)}
+              className={
+                "h-6 w-[3px] mx-1 rounded-full transition-colors self-center " +
+                (dragOver === i ? "bg-sky-400" : "bg-transparent")
+              }
+            />
+            <span
+              draggable
+              onDragStart={(e) => onDragStart(e, i)}
+              onDragOver={(e) => onChipDragOver(e, i)}
+              onDragEnd={onDragEnd}
+              onDrop={(e) => onDrop(e, i)}
+              title={t("dragToReorder")}
+              className={
+                "cursor-move transition-transform " +
+                (dragFrom === i ? "opacity-60 scale-95" : "") +
+                (dragOver === i ? " ring-2 ring-sky-400 rounded" : "")
+              }
+              aria-grabbed={dragFrom === i}
+            >
+              <Chip>{label(c)}</Chip>
+            </span>
+          </span>
         ))}
+        {/* drop zone at end (always rendered) */}
+        <span
+          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={(e) => onDragEnter(e, plan.length)}
+          onDrop={(e) => onDrop(e, plan.length)}
+          className={
+            "h-6 w-[3px] mx-1 rounded-full transition-colors self-center " +
+            (dragOver === plan.length ? "bg-sky-400" : "bg-transparent")
+          }
+        />
       </div>
     </div>
   );
@@ -175,24 +234,12 @@ export default function SettingsPanel({
 
       <section className="space-y-2">
         <ResourcesPanel resources={resources} setResources={setResources} />
-        <div className="grid grid-cols-2 gap-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={settings.autoRecommend}
-              onChange={(e) => setSettings({ ...settings, autoRecommend: e.target.checked })}
-            />
-            <span>{t("autoRecommend")}</span>
-          </label>
-        </div>
-        {settings.autoRecommend ? (
-          <AutoPlanView pityAlloc={pityAlloc} />
-        ) : (
-          <PriorityEditor
-            order={(settings.exchangePriority as ("A" | "E" | "T")[]) || ["E", "T", "A"]}
-            onChange={(order) => setSettings({ ...settings, exchangePriority: order })}
-          />
-        )}
+        <PlanEditor
+          plan={pityAlloc}
+          onReorder={(p) => setSettings({ ...settings, exchangePlan: p })}
+          label={(c) => (c === "A" ? t("announcer") : c === "E" ? t("ego") : t("threeStar"))}
+          onAutoArrange={() => setSettings({ ...settings, exchangePlan: undefined })}
+        />
       </section>
     </div>
   );

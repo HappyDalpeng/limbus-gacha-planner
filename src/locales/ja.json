@@ -38,5 +38,7 @@
   "legend.quantile": "{{q}}% 地点",
   "legend.pity": "天井の区切り",
   "ownAllExistingPoolEgoHint": "ピックアップ以外の排出対象E.G.Oをすべて所持している場合はオンにしてください。",
-  "resourcesSummary": "合計 {{total}} 回引ける・{{pity}} 天井可能"
+  "resourcesSummary": "合計 {{total}} 回引ける・{{pity}} 天井可能",
+  "autoArrange": "順序を提案",
+  "dragToReorder": "ドラッグで並べ替え"
 }

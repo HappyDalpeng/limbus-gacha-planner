@@ -8,6 +8,7 @@ export type GlobalSettings = {
   autoRecommend: boolean;
   ownAllExistingPoolEgo: boolean; // whether user owns all existing-pool (non-pickup) E.G.O
   exchangePriority?: ("A" | "E" | "T")[]; // manual exchange priority when autoRecommend is off
+  exchangePlan?: ("A" | "E" | "T")[]; // user-edited pity allocation (drag-and-drop)
 };
 export type Resources = { lunacy: number; ticket1: number; ticket10: number };
 export type PityAlloc = ("A" | "E" | "T")[];
@@ -236,9 +237,14 @@ export function cumulativeSuccess(
   return tailA * tailE * tailT;
 }
 
-export function computeGreedyPityAlloc(Nmax: number, settings: GlobalSettings, targets: Targets) {
+export function computeGreedyPityAlloc(
+  Nmax: number,
+  settings: GlobalSettings,
+  targets: Targets,
+  initialAlloc: PityAlloc = [],
+) {
   const R = Math.floor(Nmax / PITY_STEP);
-  const alloc: PityAlloc = [];
+  const alloc: PityAlloc = [...initialAlloc];
 
   const remaining: Record<"A" | "E" | "T", number> = {
     A: Math.max(0, targets.A.desired),
@@ -246,7 +252,13 @@ export function computeGreedyPityAlloc(Nmax: number, settings: GlobalSettings, t
     T: Math.max(0, targets.T.desired),
   };
 
-  for (let r = 1; r <= R; r++) {
+  // Apply initial allocation to remaining counts
+  for (let i = 0; i < initialAlloc.length; i++) {
+    const c = initialAlloc[i];
+    remaining[c] = Math.max(0, remaining[c] - 1);
+  }
+
+  for (let r = alloc.length + 1; r <= R; r++) {
     const nBefore = r * PITY_STEP - 1;
     const nAfter = r * PITY_STEP;
 

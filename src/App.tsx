@@ -63,10 +63,14 @@ export default function App() {
     (["A", "E", "T"] as const).forEach((k) => {
       if (!uniq.includes(k)) uniq.push(k);
     });
+    const plan = Array.isArray(raw?.exchangePlan)
+      ? (raw.exchangePlan as any[]).filter((x) => x === "A" || x === "E" || x === "T")
+      : undefined;
     return {
       autoRecommend: Boolean(raw?.autoRecommend ?? true),
       ownAllExistingPoolEgo: Boolean(raw?.ownAllExistingPoolEgo ?? false),
       exchangePriority: uniq,
+      exchangePlan: plan as ("A" | "E" | "T")[] | undefined,
     };
   };
 
@@ -105,8 +109,9 @@ export default function App() {
 
   const pityAlloc = useMemo(() => {
     const max = autoMaxDraws(targets);
-    if (settings.autoRecommend) return computeGreedyPityAlloc(max, settings, targets);
-    return computePriorityPityAlloc(max, targets, settings.exchangePriority || ["E", "T", "A"]);
+    const R = Math.floor(max / 200);
+    const prefix = (settings.exchangePlan || []).slice(0, R);
+    return computeGreedyPityAlloc(max, settings, targets, prefix);
   }, [settings, targets]);
 
   useEffect(() => {

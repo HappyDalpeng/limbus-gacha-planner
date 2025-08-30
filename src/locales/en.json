@@ -38,5 +38,7 @@
   "legend.quantile": "{{q}}% point",
   "legend.pity": "Pity thresholds",
   "ownAllExistingPoolEgoHint": "If you own all non-pickup E.G.O currently in the pool, turn this on.",
-  "resourcesSummary": "Total pulls: {{total}} · {{pity}} pity available"
+  "resourcesSummary": "Total pulls: {{total}} · {{pity}} pity available",
+  "autoArrange": "Suggest order",
+  "dragToReorder": "Drag to reorder"
 }
