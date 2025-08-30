@@ -188,31 +188,33 @@ export default function ChartTab({
             </LineChart>
           </ResponsiveContainer>
         </div>
+        <div className="border-t border-zinc-200 dark:border-zinc-800 mt-3 pt-3">
+          <details>
+            <summary className="cursor-pointer text-sm">{t("beforeAfter")}</summary>
+            <div className="overflow-x-auto mt-2">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left">
+                    <th className="px-2 py-1">{t("pity")}</th>
+                    <th className="px-2 py-1">{t("before")}</th>
+                    <th className="px-2 py-1">{t("after")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.pity} className="border-t border-zinc-200 dark:border-zinc-800">
+                      <td className="px-2 py-1">{r.pity}</td>
+                      <td className="px-2 py-1">{`${formatPercentValue(r.before, 2)}%`}</td>
+                      <td className="px-2 py-1">{`${formatPercentValue(r.after, 2)}%`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
       </div>
 
-      <details className="rounded-2xl bg-white dark:bg-zinc-900 shadow p-4">
-        <summary className="cursor-pointer">{t("beforeAfter")}</summary>
-        <div className="overflow-x-auto mt-3">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th className="px-2 py-1">{t("pity")}</th>
-                <th className="px-2 py-1">{t("before")}</th>
-                <th className="px-2 py-1">{t("after")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.pity} className="border-t border-zinc-200 dark:border-zinc-800">
-                  <td className="px-2 py-1">{r.pity}</td>
-                  <td className="px-2 py-1">{`${formatPercentValue(r.before, 2)}%`}</td>
-                  <td className="px-2 py-1">{`${formatPercentValue(r.after, 2)}%`}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
     </div>
   );
 }
