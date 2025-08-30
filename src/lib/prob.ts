@@ -147,6 +147,29 @@ export function cumulativeSuccess(
   targets: Targets,
   pityAlloc: PityAlloc,
 ) {
+  // Memoization cache per unique input tuple to avoid recomputation across the UI
+  // Only fields actually used by this function are included in the key.
+  const __cache = (cumulativeSuccess as any).__cache as Map<string, number> | undefined;
+  const cache: Map<string, number> = __cache ?? new Map<string, number>();
+  if (!__cache) (cumulativeSuccess as any).__cache = cache;
+  const key = (() => {
+    const s = settings.ownAllExistingPoolEgo ? 1 : 0;
+    const t = targets;
+    const allocKey = pityAlloc.join("");
+    return [
+      n,
+      s,
+      t.A.pickup,
+      t.A.desired,
+      t.E.pickup,
+      t.E.desired,
+      t.T.pickup,
+      t.T.desired,
+      allocKey,
+    ].join("|");
+  })();
+  const hit = cache.get(key);
+  if (typeof hit === "number") return hit;
   const r = Math.floor(n / PITY_STEP);
   const pityCounts = { A: 0, E: 0, T: 0 } as Record<"A" | "E" | "T", number>;
   for (let i = 0; i < r && i < pityAlloc.length; i++) pityCounts[pityAlloc[i]]++;
@@ -234,7 +257,9 @@ export function cumulativeSuccess(
     return dp[mE].reduce((a, b) => a + b, 0);
   })();
 
-  return tailA * tailE * tailT;
+  const out = tailA * tailE * tailT;
+  cache.set(key, out);
+  return out;
 }
 
 // Monte Carlo estimate of F(n) without changing the analytic model.

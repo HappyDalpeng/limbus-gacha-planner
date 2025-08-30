@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import TooltipContent from "./TooltipContent";
 import { useTranslation } from "react-i18next";
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState, type ReactElement } from "react";
 
 type Datum = { n: number; F: number };
 
@@ -49,6 +49,7 @@ function ProbabilityChart({
   resLabel,
   qY,
   qLabel,
+  freezeXAxis,
 }: {
   data: Datum[];
   mcData: { n: number; MC: number }[];
@@ -68,6 +69,7 @@ function ProbabilityChart({
   resLabel: string;
   qY: number;
   qLabel: string;
+  freezeXAxis?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -180,20 +182,32 @@ function ProbabilityChart({
     [showMC, mcData],
   );
 
+  // Build XAxis element and freeze it during simulation to avoid re-rendering
+  const xAxisBuilt = useMemo(
+    () => (
+      <XAxis
+        dataKey="n"
+        type="number"
+        domain={[0, maxN]}
+        ticks={xTicks}
+        interval={0}
+        tickLine={false}
+        tickMargin={8}
+        allowDecimals={false}
+      />
+    ),
+    [xTicks, maxN],
+  );
+  const [xAxisFrozen, setXAxisFrozen] = useState<ReactElement | null>(null);
+  useEffect(() => {
+    if (!freezeXAxis) setXAxisFrozen(xAxisBuilt);
+  }, [freezeXAxis, xAxisBuilt]);
+
   return (
     <ResponsiveContainer debounce={100}>
       <ComposedChart data={data as any} margin={{ right: 24, bottom: 12, top: 24 }}>
         <CartesianGrid stroke={colors.grid} strokeDasharray="2 2" />
-        <XAxis
-          dataKey="n"
-          type="number"
-          domain={[0, maxN]}
-          ticks={xTicks}
-          interval={0}
-          tickLine={false}
-          tickMargin={8}
-          allowDecimals={false}
-        />
+        {(xAxisFrozen ?? xAxisBuilt)}
         <YAxis
           tickFormatter={(v) => (v * 100).toFixed(0) + "%"}
           domain={[0, 1]}

@@ -18,6 +18,7 @@ import { computeXTicks } from "@/lib/chart";
 import { formatPercentValue } from "@/lib/format";
 import { useThemeColors } from "@/lib/colors";
 import ProbabilityChart from "./ProbabilityChart";
+import NumberField from "./NumberField";
 import LegendInline from "./LegendInline";
 import { useSingleRunSim } from "@/hooks/useSingleRunSim";
 
@@ -53,10 +54,7 @@ export default function ChartTab({
   const { t } = useTranslation();
   const [q, setQ] = useState(0.9);
   const themeColors = useThemeColors(COLOR_FALLBACK as any);
-  const chartColors = useMemo(
-    () => ({ ...COLOR_FALLBACK, ...themeColors } as any),
-    [themeColors],
-  );
+  const chartColors = useMemo(() => ({ ...COLOR_FALLBACK, ...themeColors }) as any, [themeColors]);
 
   const { total } = useMemo(() => resourcesToDraws(resources), [resources]);
   const maxN = useMemo(() => autoMaxDraws(targets), [targets]);
@@ -178,17 +176,16 @@ export default function ChartTab({
               ·
             </span>
             <Trans i18nKey="nQLineWithInput" values={{ n: qN }}>
-              <input
-                type="number"
+              <NumberField
                 min={1}
                 max={99}
                 className="mx-1 w-16 bg-transparent text-center border-0 border-b-2 border-zinc-300 dark:border-zinc-600 py-0.5 leading-none focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-400"
                 value={Math.round(q * 100)}
-                onChange={(e) => {
-                  const v = e.currentTarget.valueAsNumber;
-                  const pct = Number.isFinite(v) ? Math.max(1, Math.min(99, Math.round(v))) : 1;
+                onChange={(v) => {
+                  const pct = Math.max(1, Math.min(99, Math.round(v)));
                   setQ(pct / 100);
                 }}
+                inputMode="numeric"
               />
             </Trans>
           </div>
@@ -202,11 +199,10 @@ export default function ChartTab({
         />
 
         <div className="flex items-center justify-end mb-2 gap-2 text-xs">
-
           {/* 1회 시뮬레이션: 라벨 + 플레이 아이콘 버튼 */}
           <div className="flex items-center gap-2">
             <span>{t("runWithCurrentResources")}</span>
-            {(!simRunning && (simData.length > 0 || eventData.length > 0)) ? (
+            {!simRunning && (simData.length > 0 || eventData.length > 0) ? (
               <button
                 className="px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800"
                 onClick={() => clearSim()}
@@ -275,6 +271,7 @@ export default function ChartTab({
             resY={probAtClampedTotal}
             qLabel={`${formatPercentValue(q, 2)}%`}
             qY={q}
+            freezeXAxis={simRunning}
           />
         </div>
         {/* MC meta */}
