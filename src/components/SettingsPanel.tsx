@@ -85,7 +85,7 @@ function PlanEditor({
       }}
     >
       <div className="flex items-center gap-2">
-        <div className="opacity-70">{t("exchangePlan")}</div>
+        <h3 className="font-semibold">{t("exchangePlan")}</h3>
         <button
           className="ml-auto px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800"
           onClick={onAutoArrange}
@@ -186,54 +186,60 @@ export default function SettingsPanel({
             <span className="whitespace-nowrap">{t("syncDesired")}</span>
           </label>
         </div>
-        <TargetInputs
-          label={t("announcer")}
-          value={targets.A}
-          sync={syncDesired}
-          onChange={(v) => setTargets({ ...targets, A: v })}
-        />
-        <TargetInputs
-          label={t("ego")}
-          value={targets.E}
-          sync={syncDesired}
-          onChange={(v) => setTargets({ ...targets, E: v })}
-          headerRight={
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  checked={settings.ownAllExistingPoolEgo}
-                  onChange={(e) =>
-                    setSettings({ ...settings, ownAllExistingPoolEgo: e.target.checked })
-                  }
-                />
-                <span>{t("ownAllExistingPoolEgo")}</span>
-              </label>
-              <div className="relative group">
-                <span
-                  aria-label={t("ownAllExistingPoolEgoHint")}
-                  className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-zinc-400 text-[10px] leading-none select-none cursor-help"
-                  title={t("ownAllExistingPoolEgoHint")}
-                >
-                  i
-                </span>
-                <div className="hidden group-hover:block absolute z-10 right-0 mt-1 w-64 text-xs p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow">
-                  {t("ownAllExistingPoolEgoHint")}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1">
+          <TargetInputs
+            label={t("announcer")}
+            value={targets.A}
+            sync={syncDesired}
+            onChange={(v) => setTargets({ ...targets, A: v })}
+          />
+          <TargetInputs
+            label={t("ego")}
+            value={targets.E}
+            sync={syncDesired}
+            onChange={(v) => setTargets({ ...targets, E: v })}
+            headerRight={
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={settings.ownAllExistingPoolEgo}
+                    onChange={(e) =>
+                      setSettings({ ...settings, ownAllExistingPoolEgo: e.target.checked })
+                    }
+                  />
+                  <span>{t("ownAllExistingPoolEgo")}</span>
+                </label>
+                <div className="relative group">
+                  <span
+                    aria-label={t("ownAllExistingPoolEgoHint")}
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-zinc-400 text-[10px] leading-none select-none cursor-help"
+                    title={t("ownAllExistingPoolEgoHint")}
+                  >
+                    i
+                  </span>
+                  <div className="hidden group-hover:block absolute z-10 right-0 mt-1 w-64 text-xs p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow">
+                    {t("ownAllExistingPoolEgoHint")}
+                  </div>
                 </div>
               </div>
-            </div>
-          }
-        />
-        <TargetInputs
-          label={t("threeStar")}
-          value={targets.T}
-          sync={syncDesired}
-          onChange={(v) => setTargets({ ...targets, T: v })}
-        />
+            }
+          />
+          <TargetInputs
+            label={t("threeStar")}
+            value={targets.T}
+            sync={syncDesired}
+            onChange={(v) => setTargets({ ...targets, T: v })}
+          />
+        </div>
       </section>
 
-      <section className="space-y-2">
+      <section className="space-y-2 md:border-l md:border-zinc-200 dark:md:border-zinc-800 md:pl-4">
+        {/* Divider between Targets and Resources on small screens */}
+        <div className="md:hidden border-t border-zinc-200 dark:border-zinc-800 my-2" />
         <ResourcesPanel resources={resources} setResources={setResources} />
+        {/* Divider between Resources and Exchange Plan */}
+        <div className="border-t border-zinc-200 dark:border-zinc-800 my-2" />
         <PlanEditor
           plan={pityAlloc}
           onReorder={(p) => setSettings({ ...settings, exchangePlan: p })}
