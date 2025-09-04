@@ -31,11 +31,7 @@ export default function TopBar() {
             <option value="en">English</option>
             <option value="ja">日本語</option>
           </select>
-          <button
-            onClick={toggleDark}
-            aria-label={t("darkMode") as string}
-            className="btn btn-sm"
-          >
+          <button onClick={toggleDark} aria-label={t("darkMode") as string} className="btn btn-sm">
             {t("darkMode")}
           </button>
         </div>

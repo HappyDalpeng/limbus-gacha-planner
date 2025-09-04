@@ -205,8 +205,11 @@ function ProbabilityChart({
             | React.MutableRefObject<ReactElement | null>
             | undefined;
           if (!xRef) {
-            (ProbabilityChart as any).__xAxisRef = { current: null } as React.MutableRefObject<ReactElement | null>;
-            xRef = (ProbabilityChart as any).__xAxisRef as React.MutableRefObject<ReactElement | null>;
+            (ProbabilityChart as any).__xAxisRef = {
+              current: null,
+            } as React.MutableRefObject<ReactElement | null>;
+            xRef = (ProbabilityChart as any)
+              .__xAxisRef as React.MutableRefObject<ReactElement | null>;
           }
           // Update cached axis when not frozen
           // Note: this executes during render; we only mutate a ref (no re-render)

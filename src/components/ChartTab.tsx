@@ -94,24 +94,27 @@ export default function ChartTab() {
   // Monte Carlo auxiliary generation (run on demand)
   const runMonteCarlo = () => {
     try {
-    const S = 200; // samples per point
-    const indices = new Set<number>();
-    indices.add(0);
-    indices.add(maxN);
-    computeXTicks(maxN, chartWidth || 0).forEach((x) => {
-      if (x >= 0 && x <= maxN) indices.add(x);
-    });
-    const R = Math.floor(maxN / PITY_STEP);
-    for (let r = 1; r <= R; r++) {
-      const before = r * PITY_STEP - 1;
-      const after = r * PITY_STEP;
-      if (before >= 0 && before <= maxN) indices.add(before);
-      if (after >= 0 && after <= maxN) indices.add(after);
-    }
-    const pts = Array.from(indices).sort((a, b) => a - b);
-    const arr = pts.map((n) => ({ n, MC: monteCarloSuccess(n, settings, targets, pityAlloc, S) }));
-    for (let i = 1; i < arr.length; i++) if (arr[i].MC < arr[i - 1].MC) arr[i].MC = arr[i - 1].MC;
-    setMcData(arr);
+      const S = 200; // samples per point
+      const indices = new Set<number>();
+      indices.add(0);
+      indices.add(maxN);
+      computeXTicks(maxN, chartWidth || 0).forEach((x) => {
+        if (x >= 0 && x <= maxN) indices.add(x);
+      });
+      const R = Math.floor(maxN / PITY_STEP);
+      for (let r = 1; r <= R; r++) {
+        const before = r * PITY_STEP - 1;
+        const after = r * PITY_STEP;
+        if (before >= 0 && before <= maxN) indices.add(before);
+        if (after >= 0 && after <= maxN) indices.add(after);
+      }
+      const pts = Array.from(indices).sort((a, b) => a - b);
+      const arr = pts.map((n) => ({
+        n,
+        MC: monteCarloSuccess(n, settings, targets, pityAlloc, S),
+      }));
+      for (let i = 1; i < arr.length; i++) if (arr[i].MC < arr[i - 1].MC) arr[i].MC = arr[i - 1].MC;
+      setMcData(arr);
     } catch (err) {
       // In case of any unexpected runtime errors, clear MC data for safety
       console.error("MC run error", err);
@@ -125,7 +128,10 @@ export default function ChartTab() {
   }, [showMC]);
 
   // Stable key for pity allocation to avoid identity-based loops
-  const pityKey = useMemo(() => (pityAlloc && pityAlloc.length ? pityAlloc.join(",") : ""), [pityAlloc]);
+  const pityKey = useMemo(
+    () => (pityAlloc && pityAlloc.length ? pityAlloc.join(",") : ""),
+    [pityAlloc],
+  );
 
   // When core inputs change, clear any existing single-run simulation (Luck Line)
   useEffect(() => {

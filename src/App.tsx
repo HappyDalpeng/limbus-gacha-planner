@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TopBar from "./components/TopBar";
 import SettingsPanel from "./components/SettingsPanel";
@@ -18,6 +18,33 @@ export default function App() {
   const pityAlloc = usePityAlloc();
   // URL sync for targets + syncDesired
   useTargetsUrlSync();
+
+  // Reset manual exchange plan to recommended order whenever targets change
+  const targetsKey = useMemo(
+    () =>
+      [
+        targets.A.pickup,
+        targets.A.desired,
+        targets.E.pickup,
+        targets.E.desired,
+        targets.T.pickup,
+        targets.T.desired,
+      ].join("-"),
+    [targets],
+  );
+  const prevTargetsKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevTargetsKeyRef.current === null) {
+      prevTargetsKeyRef.current = targetsKey;
+      return;
+    }
+    if (prevTargetsKeyRef.current !== targetsKey) {
+      const st = useAppStore.getState();
+      const s = st.settings;
+      if (s.exchangePlan !== undefined) st.setSettings({ ...s, exchangePlan: undefined });
+      prevTargetsKeyRef.current = targetsKey;
+    }
+  }, [targetsKey]);
 
   useEffect(() => {
     document.title = t("title");

@@ -28,7 +28,9 @@ export default function TargetInputs({
         <label className="flex-1 text-sm grid gap-1">
           <span className="text-xs opacity-70">{t("desiredCount")}</span>
           <NumberField
-            className={"input input-bordered w-full" + (sync ? " opacity-60 cursor-not-allowed" : "")}
+            className={
+              "input input-bordered w-full" + (sync ? " opacity-60 cursor-not-allowed" : "")
+            }
             value={value.desired}
             onChange={(v) =>
               onChange({ ...value, desired: Math.max(0, Math.min(v, value.pickup)) })

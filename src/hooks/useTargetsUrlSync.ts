@@ -4,14 +4,7 @@ import { useAppStore } from "@/store/appStore";
 
 // Dash-separated encoding to avoid URL encoding of commas
 export function encodeTargets(tgt: Targets): string {
-  return [
-    tgt.A.pickup,
-    tgt.A.desired,
-    tgt.E.pickup,
-    tgt.E.desired,
-    tgt.T.pickup,
-    tgt.T.desired,
-  ]
+  return [tgt.A.pickup, tgt.A.desired, tgt.E.pickup, tgt.E.desired, tgt.T.pickup, tgt.T.desired]
     .map((n) => Math.max(0, Math.floor(Number(n) || 0)))
     .join("-");
 }
@@ -76,4 +69,3 @@ export function useTargetsUrlSync() {
     } catch {}
   }, [targets, syncDesired]);
 }
-

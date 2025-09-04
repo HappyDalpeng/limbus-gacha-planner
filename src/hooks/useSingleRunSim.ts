@@ -158,14 +158,18 @@ export function useSingleRunSim({
         rafRef.current = null;
         return;
       }
-      const raf = (typeof requestAnimationFrame !== "undefined"
-        ? requestAnimationFrame
-        : (cb: FrameRequestCallback) => (setTimeout(() => cb(performance.now()), 16) as any)) as any;
+      const raf = (
+        typeof requestAnimationFrame !== "undefined"
+          ? requestAnimationFrame
+          : (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16) as any
+      ) as any;
       rafRef.current = raf(tick);
     };
-    const raf = (typeof requestAnimationFrame !== "undefined"
-      ? requestAnimationFrame
-      : (cb: FrameRequestCallback) => (setTimeout(() => cb(performance.now()), 16) as any)) as any;
+    const raf = (
+      typeof requestAnimationFrame !== "undefined"
+        ? requestAnimationFrame
+        : (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16) as any
+    ) as any;
     rafRef.current = raf(tick);
   }
 
