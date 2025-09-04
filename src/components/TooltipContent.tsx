@@ -1,5 +1,5 @@
-import { useTranslation } from "react-i18next";
 import { formatPercentValue } from "@/lib/format";
+import { useTranslation } from "react-i18next";
 
 export default function TooltipContent({ active, payload, label, showMC, mcData }: any) {
   const { t } = useTranslation();

@@ -1,17 +1,17 @@
+import { memo, useMemo, useState, type ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  CartesianGrid,
   ComposedChart,
   Line,
+  ReferenceDot,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  CartesianGrid,
-  ReferenceDot,
 } from "recharts";
 import TooltipContent from "./TooltipContent";
-import { useTranslation } from "react-i18next";
-import { memo, useMemo, useState, useRef, type ReactElement } from "react";
 
 type Datum = { n: number; F: number };
 

@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
 import type { Targets } from "@/lib/prob";
 import { useAppStore } from "@/store/appStore";
+import { useEffect } from "react";
 
 // Dash-separated encoding to avoid URL encoding of commas
 export function encodeTargets(tgt: Targets): string {

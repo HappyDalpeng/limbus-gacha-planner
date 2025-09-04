@@ -1,10 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import type React from "react";
-import { Targets, GlobalSettings, Resources } from "@/lib/prob";
-import TargetInputs from "./TargetInputs";
-import ResourcesPanel from "./ResourcesPanel";
 import { useAppStore, usePityAlloc } from "@/store/appStore";
+import type React from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import ResourcesPanel from "./ResourcesPanel";
+import TargetInputs from "./TargetInputs";
 
 function Chip({ children }: { children: string }) {
   return (

@@ -1,8 +1,8 @@
-import { create } from "zustand";
-import { useMemo } from "react";
-import { persist } from "zustand/middleware";
 import type { GlobalSettings, Resources, Targets } from "@/lib/prob";
 import { autoMaxDraws, computeGreedyPityAlloc } from "@/lib/prob";
+import { useMemo } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type AppState = {
   // UI

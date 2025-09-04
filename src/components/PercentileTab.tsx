@@ -1,9 +1,9 @@
-import { useMemo, useRef, useState } from "react";
-import NumberField from "./NumberField";
-import { useTranslation } from "react-i18next";
+import { formatPercentValue } from "@/lib/format";
 import { cumulativeSuccess } from "@/lib/prob";
 import { useAppStore, usePityAlloc } from "@/store/appStore";
-import { formatPercentValue } from "@/lib/format";
+import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import NumberField from "./NumberField";
 
 export default function PercentileTab() {
   const { t } = useTranslation();

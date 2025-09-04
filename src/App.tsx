@@ -1,12 +1,11 @@
+import { useTargetsUrlSync } from "@/hooks/useTargetsUrlSync";
+import { useAppStore, usePityAlloc } from "@/store/appStore";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TopBar from "./components/TopBar";
 import SettingsPanel from "./components/SettingsPanel";
+import TopBar from "./components/TopBar";
 const ChartTab = lazy(() => import("./components/ChartTab"));
 const PercentileTab = lazy(() => import("./components/PercentileTab"));
-import { Targets, GlobalSettings, Resources } from "./lib/prob";
-import { useAppStore, usePityAlloc } from "@/store/appStore";
-import { useTargetsUrlSync } from "@/hooks/useTargetsUrlSync";
 
 export default function App() {
   const { t } = useTranslation();

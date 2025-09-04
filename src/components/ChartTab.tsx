@@ -1,23 +1,23 @@
-import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { Trans, useTranslation } from "react-i18next";
-import {
-  cumulativeSuccess,
-  resourcesToDraws,
-  findNforQuantile,
-  beforeAfterTable,
-  autoMaxDraws,
-  PITY_STEP,
-  monteCarloSuccess,
-} from "@/lib/prob";
-import { useElementWidth } from "@/lib/hooks";
-import { computeXTicks } from "@/lib/chart";
-import { formatPercentValue } from "@/lib/format";
-import { useThemeColors } from "@/lib/colors";
-import ProbabilityChart from "./ProbabilityChart";
-import NumberField from "./NumberField";
-import LegendInline from "./LegendInline";
 import { useSingleRunSim } from "@/hooks/useSingleRunSim";
+import { computeXTicks } from "@/lib/chart";
+import { useThemeColors } from "@/lib/colors";
+import { formatPercentValue } from "@/lib/format";
+import { useElementWidth } from "@/lib/hooks";
+import {
+  autoMaxDraws,
+  beforeAfterTable,
+  cumulativeSuccess,
+  findNforQuantile,
+  monteCarloSuccess,
+  PITY_STEP,
+  resourcesToDraws,
+} from "@/lib/prob";
 import { useAppStore, usePityAlloc } from "@/store/appStore";
+import { useEffect, useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import LegendInline from "./LegendInline";
+import NumberField from "./NumberField";
+import ProbabilityChart from "./ProbabilityChart";
 
 // Centralize colors/styles for clarity
 const COLOR_FALLBACK = {

@@ -1,8 +1,8 @@
-import { useMemo } from "react";
-import NumberField from "./NumberField";
-import { useTranslation } from "react-i18next";
-import { resourcesToDraws, PITY_STEP } from "@/lib/prob";
+import { PITY_STEP, resourcesToDraws } from "@/lib/prob";
 import { useAppStore } from "@/store/appStore";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import NumberField from "./NumberField";
 
 export default function ResourcesPanel() {
   const { t } = useTranslation();

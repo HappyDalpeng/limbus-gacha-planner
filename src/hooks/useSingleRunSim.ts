@@ -1,12 +1,12 @@
-import { useRef, useState } from "react";
 import {
-  PITY_STEP,
-  baseCategoryProbs,
   GlobalSettings,
+  PITY_STEP,
   PityAlloc,
   Targets,
+  baseCategoryProbs,
   cumulativeSuccess,
 } from "@/lib/prob";
+import { useRef, useState } from "react";
 
 export type SimPoint = { n: number; R: number };
 export type SimEvent = { n: number; y: number; kind: "A" | "E" | "T"; source: "draw" | "pity" };
