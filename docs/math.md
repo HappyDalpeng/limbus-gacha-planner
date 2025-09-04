@@ -52,8 +52,8 @@ E.G.O는 획득 시 풀에서 제거되는 특성을 2차원 상태 추적으로
 
 **전이 확률** (매 뽑기):
 
-- 원하는 E.G.O: $p_{\text{desired}} = p_{E,\text{base}} \times \frac{\text{남은 원하는}}{\text{남은 픽업}} \rightarrow (s+1, t+1)$
-- 비원하는 E.G.O: $p_{\text{undesired}} = p_{E,\text{base}} \times \frac{\text{남은 비원하는}}{\text{남은 픽업}} \rightarrow (s, t+1)$
+- 원하는 E.G.O: $p_{\text{desired}} = p_{E,\text{base}} \times \frac{\text{남은 원하는 픽업}}{\text{남은 픽업}} \rightarrow (s+1, t+1)$
+- 원하지 않는 E.G.O: $p_{\text{undesired}} = p_{E,\text{base}} \times \frac{\text{남은 원하지 않는 픽업}}{\text{남은 픽업}} \rightarrow (s, t+1)$
 - 다른 카테고리: $p_{\text{other}} = 1 - p_{E,\text{base}} \rightarrow (s, t)$
 
 **종료 조건**: $s \geq m_E$ (목표 달성) 상태에서 확률 질량 흡수
@@ -108,8 +108,8 @@ $$F(n) = \Pr[K_A \geq m_A] \times \Pr[K_E \geq m_E] \times \Pr[K_T \geq m_T]$$
 
 **단일 뽑기 모델**:
 
-- A/T 카테고리: 고정 확률로 선택 후 원하는/비원하는 베르누이 판정
-- E.G.O: 고정 질량에서 남은 비율로 원하는/비원하는 판정 후 풀 갱신
+- A/T 카테고리: 고정 확률로 선택 후 원하는 것/원하지 않는 것 베르누이 판정
+- E.G.O: 고정 질량에서 남은 비율로 원하는 것/원하지 않는 것 판정 후 풀 갱신
 
 **포인트 배치**: 0, 최대값, X축 눈금, 천장 경계(200r±1)에 포인트 생성  
 **시각화**: 단조 보정 적용으로 누적 확률 성질 유지
