@@ -8,6 +8,8 @@ type AppState = {
   // UI
   open: boolean;
   setOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
+  syncDesired: boolean;
+  setSyncDesired: (v: boolean) => void;
 
   // Core domain state
   targets: Targets;
@@ -102,6 +104,8 @@ export const useAppStore = create<AppState>()(
         set((s) => ({
           open: typeof v === "function" ? (v as (b: boolean) => boolean)(s.open) : v,
         })),
+      syncDesired: false,
+      setSyncDesired: (v: boolean) => set({ syncDesired: Boolean(v) }),
 
       targets: defaults.targets,
       setTargets: (next) => set({ targets: sanitizeTargets(next) }),
@@ -117,6 +121,7 @@ export const useAppStore = create<AppState>()(
       version: 1,
       partialize: (state) => ({
         open: state.open,
+        syncDesired: state.syncDesired,
         targets: state.targets,
         settings: state.settings,
         resources: state.resources,
@@ -127,6 +132,10 @@ export const useAppStore = create<AppState>()(
         return {
           ...current,
           open: typeof raw.open === "boolean" ? raw.open : current.open,
+          syncDesired:
+            typeof (raw as any).syncDesired === "boolean"
+              ? (raw as any).syncDesired
+              : current.syncDesired,
           targets: raw.targets ? sanitizeTargets(raw.targets) : current.targets,
           settings: raw.settings ? sanitizeSettings(raw.settings) : current.settings,
           resources: raw.resources ? sanitizeResources(raw.resources) : current.resources,

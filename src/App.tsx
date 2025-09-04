@@ -6,6 +6,7 @@ const ChartTab = lazy(() => import("./components/ChartTab"));
 const PercentileTab = lazy(() => import("./components/PercentileTab"));
 import { Targets, GlobalSettings, Resources } from "./lib/prob";
 import { useAppStore, usePityAlloc } from "@/store/appStore";
+import { useTargetsUrlSync } from "@/hooks/useTargetsUrlSync";
 
 export default function App() {
   const { t } = useTranslation();
@@ -15,6 +16,8 @@ export default function App() {
   const settings = useAppStore((s) => s.settings);
   const resources = useAppStore((s) => s.resources);
   const pityAlloc = usePityAlloc();
+  // URL sync for targets + syncDesired
+  useTargetsUrlSync();
 
   useEffect(() => {
     document.title = t("title");

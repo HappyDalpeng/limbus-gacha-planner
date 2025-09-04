@@ -139,7 +139,8 @@ function PlanEditor({
 
 export default function SettingsPanel() {
   const { t } = useTranslation();
-  const [syncDesired, setSyncDesired] = useState(false);
+  const syncDesired = useAppStore((s) => s.syncDesired);
+  const setSyncDesired = useAppStore((s) => s.setSyncDesired);
   const settings = useAppStore((s) => s.settings);
   const setSettings = useAppStore((s) => s.setSettings);
   const targets = useAppStore((s) => s.targets);
