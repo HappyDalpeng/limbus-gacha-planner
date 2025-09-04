@@ -9,7 +9,9 @@
         var theme = localStorage.getItem("theme");
         var preferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         var on = theme === "dark" || (!theme && preferDark);
-        document.documentElement.classList.toggle("dark", on);
+        var html = document.documentElement;
+        html.classList.toggle("dark", on);
+        html.setAttribute("data-theme", on ? "dark" : "light");
       })();
     </script>
   </head>

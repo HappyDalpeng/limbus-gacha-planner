@@ -208,7 +208,7 @@ export default function ChartTab() {
             <span>{t("runWithCurrentResources")}</span>
             {!simRunning && (simData.length > 0 || eventData.length > 0) ? (
               <button
-                className="px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800"
+                className="btn btn-xs btn-outline"
                 onClick={() => clearSim()}
                 title={t("clearSingleSim")}
                 aria-label={t("clearSingleSim")}
@@ -217,10 +217,7 @@ export default function ChartTab() {
               </button>
             ) : (
               <button
-                className={
-                  "px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 " +
-                  (simRunning ? "opacity-60 cursor-not-allowed" : "")
-                }
+                className={"btn btn-xs " + (simRunning ? "btn-disabled" : "btn-outline")}
                 onClick={() => {
                   if (simRunning) return;
                   startSim();
@@ -239,12 +236,17 @@ export default function ChartTab() {
 
           {/* 시뮬레이션 보조선 토글 + 재실행 */}
           <label className="flex items-center gap-1 opacity-80">
-            <input type="checkbox" checked={showMC} onChange={(e) => setShowMC(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={showMC}
+              onChange={(e) => setShowMC(e.target.checked)}
+              className="checkbox checkbox-xs"
+            />
             <span>{t("showMCAlt")}</span>
           </label>
           <button
             className={
-              "px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 transition-opacity " +
+              "btn btn-xs btn-outline transition-opacity " +
               (showMC ? "opacity-100" : "opacity-0 pointer-events-none")
             }
             onClick={runMonteCarlo}

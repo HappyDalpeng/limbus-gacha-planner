@@ -28,7 +28,7 @@ export default function App() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{t("settings")}</h2>
             <button
-              className="text-sm underline hover:no-underline"
+              className="btn btn-ghost btn-sm"
               onClick={() => setOpen((o) => !o)}
               aria-expanded={open}
             >
@@ -60,26 +60,18 @@ function Tabs() {
   const [tab, setTab] = useState<"curve" | "perc">("curve");
   return (
     <div>
-      <div className="flex gap-2 mb-3">
+      <div className="tabs tabs-border" role="tablist">
         <button
+          role="tab"
           onClick={() => setTab("curve")}
-          className={
-            "px-3 py-2 rounded-xl text-sm " +
-            (tab === "curve"
-              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-              : "bg-white/70 dark:bg-zinc-900/80")
-          }
+          className={tab === "curve" ? "tab tab-active" : "tab"}
         >
           {t("tabs.chart")}
         </button>
         <button
+          role="tab"
           onClick={() => setTab("perc")}
-          className={
-            "px-3 py-2 rounded-xl text-sm " +
-            (tab === "perc"
-              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-              : "bg-white/70 dark:bg-zinc-900/80")
-          }
+          className={tab === "perc" ? "tab tab-active" : "tab"}
         >
           {t("tabs.perc")}
         </button>

@@ -51,7 +51,7 @@ function Num({
     <label className="text-sm grid gap-1">
       <span>{label}</span>
       <NumberField
-        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2"
+        className="input input-bordered w-full"
         value={value}
         onChange={(v) => onChange(Math.max(0, v))}
         min={0}

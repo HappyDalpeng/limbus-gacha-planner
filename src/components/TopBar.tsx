@@ -12,6 +12,7 @@ export default function TopBar() {
     const html = document.documentElement;
     const next = !html.classList.contains("dark");
     html.classList.toggle("dark", next);
+    html.setAttribute("data-theme", next ? "dark" : "light");
     localStorage.setItem("theme", next ? "dark" : "light");
   };
 
@@ -24,7 +25,7 @@ export default function TopBar() {
             aria-label={t("language") as string}
             defaultValue={i18n.language}
             onChange={(e) => setLang(e.target.value)}
-            className="rounded-xl bg-white dark:bg-zinc-900 px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800"
+            className="select select-sm select-bordered"
           >
             <option value="ko">한국어</option>
             <option value="en">English</option>
@@ -33,7 +34,7 @@ export default function TopBar() {
           <button
             onClick={toggleDark}
             aria-label={t("darkMode") as string}
-            className="rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-1 text-sm"
+            className="btn btn-sm"
           >
             {t("darkMode")}
           </button>

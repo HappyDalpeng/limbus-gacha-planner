@@ -87,10 +87,7 @@ function PlanEditor({
     >
       <div className="flex items-center gap-2">
         <h3 className="font-semibold">{t("exchangePlan")}</h3>
-        <button
-          className="ml-auto px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800"
-          onClick={onAutoArrange}
-        >
+        <button className="ml-auto btn btn-xs btn-outline" onClick={onAutoArrange}>
           {t("autoArrange")}
         </button>
       </div>
@@ -174,6 +171,7 @@ export default function SettingsPanel() {
               }}
               aria-label={t("syncDesired")}
               title={t("syncDesired")}
+              className="checkbox checkbox-sm"
             />
             <span className="whitespace-nowrap">{t("syncDesired")}</span>
           </label>
@@ -195,6 +193,7 @@ export default function SettingsPanel() {
                 <label className="flex items-center gap-2 text-xs">
                   <input
                     type="checkbox"
+                    className="checkbox checkbox-sm"
                     checked={settings.ownAllExistingPoolEgo}
                     onChange={(e) =>
                       setSettings({ ...settings, ownAllExistingPoolEgo: e.target.checked })
