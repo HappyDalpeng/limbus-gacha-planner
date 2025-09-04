@@ -1,135 +1,20 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TopBar from "./components/TopBar";
 import SettingsPanel from "./components/SettingsPanel";
 const ChartTab = lazy(() => import("./components/ChartTab"));
 const PercentileTab = lazy(() => import("./components/PercentileTab"));
-import {
-  Targets,
-  GlobalSettings,
-  computeGreedyPityAlloc,
-  computePriorityPityAlloc,
-  autoMaxDraws,
-  Resources,
-} from "./lib/prob";
+import { Targets, GlobalSettings, Resources } from "./lib/prob";
+import { useAppStore, usePityAlloc } from "@/store/appStore";
 
 export default function App() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(true);
-
-  // LocalStorage keys
-  const LS_KEYS = {
-    targets: "gpp.targets.v1",
-    settings: "gpp.settings.v1",
-    resources: "gpp.resources.v1",
-  } as const;
-
-  // Safe JSON parse
-  const parseJSON = <T,>(s: string | null): T | null => {
-    if (!s) return null;
-    try {
-      return JSON.parse(s) as T;
-    } catch {
-      return null;
-    }
-  };
-
-  const sanitizeTargets = (raw: any): Targets => {
-    // Defaults for first-time visitors (desired/pickup): A 1/1, E 2/2, T 2/5
-    const def: Targets = {
-      A: { pickup: 1, desired: 1 },
-      E: { pickup: 2, desired: 2 },
-      T: { pickup: 5, desired: 2 },
-    };
-    const co = (x: any, d: { pickup: number; desired: number }) => ({
-      pickup: Math.max(
-        0,
-        Number.isFinite(Number(x?.pickup)) ? Number(x.pickup) : d.pickup,
-      ),
-      desired: Math.max(
-        0,
-        Number.isFinite(Number(x?.desired)) ? Number(x.desired) : d.desired,
-      ),
-    });
-    const A = co(raw?.A, def.A);
-    const E = co(raw?.E, def.E);
-    const T = co(raw?.T, def.T);
-    // Clamp desired <= pickup
-    A.desired = Math.min(A.desired, A.pickup);
-    E.desired = Math.min(E.desired, E.pickup);
-    T.desired = Math.min(T.desired, T.pickup);
-    return { A, E, T };
-  };
-
-  const sanitizeSettings = (raw: any): GlobalSettings => {
-    const defPrio: ("A" | "E" | "T")[] = ["E", "T", "A"];
-    const pr = Array.isArray(raw?.exchangePriority) ? (raw.exchangePriority as any[]) : defPrio;
-    const filtered = pr.filter((x) => x === "A" || x === "E" || x === "T");
-    const uniq: ("A" | "E" | "T")[] = [];
-    for (const x of filtered) if (!uniq.includes(x)) uniq.push(x as any);
-    (["A", "E", "T"] as const).forEach((k) => {
-      if (!uniq.includes(k)) uniq.push(k);
-    });
-    const plan = Array.isArray(raw?.exchangePlan)
-      ? (raw.exchangePlan as any[]).filter((x) => x === "A" || x === "E" || x === "T")
-      : undefined;
-    return {
-      autoRecommend: Boolean(raw?.autoRecommend ?? true),
-      ownAllExistingPoolEgo: Boolean(raw?.ownAllExistingPoolEgo ?? false),
-      exchangePriority: uniq,
-      exchangePlan: plan as ("A" | "E" | "T")[] | undefined,
-    };
-  };
-
-  const sanitizeResources = (raw: any): Resources => ({
-    // Defaults for first-time visitors: lunacy 20000, 1-pull 26, 10-pull 4
-    lunacy: Math.max(
-      0,
-      Number.isFinite(Number(raw?.lunacy)) ? Number(raw.lunacy) : 20000,
-    ),
-    ticket1: Math.max(
-      0,
-      Number.isFinite(Number(raw?.ticket1)) ? Number(raw.ticket1) : 26,
-    ),
-    ticket10: Math.max(
-      0,
-      Number.isFinite(Number(raw?.ticket10)) ? Number(raw.ticket10) : 4,
-    ),
-  });
-
-  // Lazy init from localStorage
-  const [targets, setTargets] = useState<Targets>(() => {
-    const stored = parseJSON<Targets>(localStorage.getItem(LS_KEYS.targets));
-    return stored ? sanitizeTargets(stored) : sanitizeTargets(null);
-  });
-
-  const [settings, setSettings] = useState<GlobalSettings>(() => {
-    const stored = parseJSON<GlobalSettings>(localStorage.getItem(LS_KEYS.settings));
-    return stored ? sanitizeSettings(stored) : sanitizeSettings(null);
-  });
-
-  const [resources, setResources] = useState<Resources>(() => {
-    const stored = parseJSON<Resources>(localStorage.getItem(LS_KEYS.resources));
-    return stored ? sanitizeResources(stored) : sanitizeResources(null);
-  });
-
-  // Persist to localStorage on change
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.targets, JSON.stringify(targets));
-  }, [targets]);
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.settings, JSON.stringify(settings));
-  }, [settings]);
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.resources, JSON.stringify(resources));
-  }, [resources]);
-
-  const pityAlloc = useMemo(() => {
-    const max = autoMaxDraws(targets);
-    const R = Math.floor(max / 200);
-    const prefix = (settings.exchangePlan || []).slice(0, R);
-    return computeGreedyPityAlloc(max, settings, targets, prefix);
-  }, [settings, targets]);
+  const open = useAppStore((s) => s.open);
+  const setOpen = useAppStore((s) => s.setOpen);
+  const targets = useAppStore((s) => s.targets);
+  const settings = useAppStore((s) => s.settings);
+  const resources = useAppStore((s) => s.resources);
+  const pityAlloc = usePityAlloc();
 
   useEffect(() => {
     document.title = t("title");
@@ -152,20 +37,12 @@ export default function App() {
           </div>
           {open && (
             <div className="mt-3 rounded-2xl bg-white/70 dark:bg-zinc-900/80 shadow p-4">
-              <SettingsPanel
-                settings={settings}
-                setSettings={setSettings}
-                targets={targets}
-                setTargets={setTargets}
-                resources={resources}
-                setResources={setResources}
-                pityAlloc={pityAlloc}
-              />
+              <SettingsPanel />
             </div>
           )}
         </div>
 
-        <Tabs targets={targets} settings={settings} resources={resources} pityAlloc={pityAlloc} />
+        <Tabs />
       </main>
       <footer className="px-4 py-6 border-t border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto max-w-6xl text-center text-xs opacity-70 leading-relaxed">
@@ -178,17 +55,7 @@ export default function App() {
   );
 }
 
-function Tabs({
-  targets,
-  settings,
-  resources,
-  pityAlloc,
-}: {
-  targets: Targets;
-  settings: GlobalSettings;
-  resources: Resources;
-  pityAlloc: ("A" | "E" | "T")[];
-}) {
+function Tabs() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<"curve" | "perc">("curve");
   return (
@@ -218,21 +85,7 @@ function Tabs({
         </button>
       </div>
       <Suspense fallback={<div className="text-sm opacity-70">Loading…</div>}>
-        {tab === "curve" ? (
-          <ChartTab
-            targets={targets}
-            settings={settings}
-            resources={resources}
-            pityAlloc={pityAlloc}
-          />
-        ) : (
-          <PercentileTab
-            targets={targets}
-            settings={settings}
-            resources={resources}
-            pityAlloc={pityAlloc}
-          />
-        )}
+        {tab === "curve" ? <ChartTab /> : <PercentileTab />}
       </Suspense>
     </div>
   );

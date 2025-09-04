@@ -4,6 +4,7 @@ import type React from "react";
 import { Targets, GlobalSettings, Resources } from "@/lib/prob";
 import TargetInputs from "./TargetInputs";
 import ResourcesPanel from "./ResourcesPanel";
+import { useAppStore, usePityAlloc } from "@/store/appStore";
 
 function Chip({ children }: { children: string }) {
   return (
@@ -139,25 +140,16 @@ function PlanEditor({
   );
 }
 
-export default function SettingsPanel({
-  settings,
-  setSettings,
-  targets,
-  setTargets,
-  resources,
-  setResources,
-  pityAlloc,
-}: {
-  settings: GlobalSettings;
-  setSettings: (s: GlobalSettings) => void;
-  targets: Targets;
-  setTargets: (t: Targets) => void;
-  resources: Resources;
-  setResources: (r: Resources) => void;
-  pityAlloc: ("A" | "E" | "T")[];
-}) {
+export default function SettingsPanel() {
   const { t } = useTranslation();
   const [syncDesired, setSyncDesired] = useState(false);
+  const settings = useAppStore((s) => s.settings);
+  const setSettings = useAppStore((s) => s.setSettings);
+  const targets = useAppStore((s) => s.targets);
+  const setTargets = useAppStore((s) => s.setTargets);
+  const resources = useAppStore((s) => s.resources);
+  const setResources = useAppStore((s) => s.setResources);
+  const pityAlloc = usePityAlloc();
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -237,7 +229,7 @@ export default function SettingsPanel({
       <section className="space-y-2 md:border-l md:border-zinc-200 dark:md:border-zinc-800 md:pl-4">
         {/* Divider between Targets and Resources on small screens */}
         <div className="md:hidden border-t border-zinc-200 dark:border-zinc-800 my-2" />
-        <ResourcesPanel resources={resources} setResources={setResources} />
+        <ResourcesPanel />
         {/* Divider between Resources and Exchange Plan */}
         <div className="border-t border-zinc-200 dark:border-zinc-800 my-2" />
         <PlanEditor

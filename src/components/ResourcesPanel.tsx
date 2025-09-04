@@ -1,16 +1,13 @@
 import { useMemo } from "react";
 import NumberField from "./NumberField";
 import { useTranslation } from "react-i18next";
-import { Resources, resourcesToDraws, PITY_STEP } from "@/lib/prob";
+import { resourcesToDraws, PITY_STEP } from "@/lib/prob";
+import { useAppStore } from "@/store/appStore";
 
-export default function ResourcesPanel({
-  resources,
-  setResources,
-}: {
-  resources: Resources;
-  setResources: (r: Resources) => void;
-}) {
+export default function ResourcesPanel() {
   const { t } = useTranslation();
+  const resources = useAppStore((s) => s.resources);
+  const setResources = useAppStore((s) => s.setResources);
   const { total } = useMemo(() => resourcesToDraws(resources), [resources]);
   const pityFromResources = Math.floor(total / PITY_STEP);
 

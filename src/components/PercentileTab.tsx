@@ -1,24 +1,18 @@
 import { useMemo, useRef, useState } from "react";
 import NumberField from "./NumberField";
 import { useTranslation } from "react-i18next";
-import { Targets, GlobalSettings, PityAlloc, cumulativeSuccess, Resources } from "@/lib/prob";
+import { cumulativeSuccess } from "@/lib/prob";
+import { useAppStore, usePityAlloc } from "@/store/appStore";
 import { formatPercentValue } from "@/lib/format";
 
-export default function PercentileTab({
-  targets,
-  settings,
-  resources,
-  pityAlloc,
-}: {
-  targets: Targets;
-  settings: GlobalSettings;
-  resources: Resources;
-  pityAlloc: PityAlloc;
-}) {
+export default function PercentileTab() {
   const { t } = useTranslation();
   const [n, setN] = useState(200);
   const cardRef = useRef<HTMLDivElement>(null);
   const [showCard, setShowCard] = useState(false);
+  const targets = useAppStore((s) => s.targets);
+  const settings = useAppStore((s) => s.settings);
+  const pityAlloc = usePityAlloc();
 
   const F = useMemo(
     () => cumulativeSuccess(n, settings, targets, pityAlloc),

@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
-  Targets,
-  GlobalSettings,
-  PityAlloc,
   cumulativeSuccess,
   resourcesToDraws,
   findNforQuantile,
   beforeAfterTable,
   autoMaxDraws,
   PITY_STEP,
-  Resources,
   monteCarloSuccess,
 } from "@/lib/prob";
 import { useElementWidth } from "@/lib/hooks";
@@ -21,6 +17,7 @@ import ProbabilityChart from "./ProbabilityChart";
 import NumberField from "./NumberField";
 import LegendInline from "./LegendInline";
 import { useSingleRunSim } from "@/hooks/useSingleRunSim";
+import { useAppStore, usePityAlloc } from "@/store/appStore";
 
 // Centralize colors/styles for clarity
 const COLOR_FALLBACK = {
@@ -40,21 +37,15 @@ const COLOR_FALLBACK = {
 
 type Datum = { n: number; F: number };
 
-export default function ChartTab({
-  targets,
-  settings,
-  resources,
-  pityAlloc,
-}: {
-  targets: Targets;
-  settings: GlobalSettings;
-  resources: Resources;
-  pityAlloc: PityAlloc;
-}) {
+export default function ChartTab() {
   const { t } = useTranslation();
   const [q, setQ] = useState(0.9);
   const themeColors = useThemeColors(COLOR_FALLBACK as any);
   const chartColors = useMemo(() => ({ ...COLOR_FALLBACK, ...themeColors }) as any, [themeColors]);
+  const targets = useAppStore((s) => s.targets);
+  const settings = useAppStore((s) => s.settings);
+  const resources = useAppStore((s) => s.resources);
+  const pityAlloc = usePityAlloc();
 
   const { total } = useMemo(() => resourcesToDraws(resources), [resources]);
   const maxN = useMemo(() => autoMaxDraws(targets), [targets]);
