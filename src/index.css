@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../node_modules/pretendard/dist/web/variable/pretendardvariable.css";
+@import "../node_modules/pretendard/dist/web/static/pretendard.css";
 @plugin "daisyui" {
   themes: light, dark;
 }
@@ -8,6 +10,25 @@ html,
 body,
 #root {
   height: 100%;
+}
+
+body {
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    Roboto,
+    "Helvetica Neue",
+    "Segoe UI",
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    sans-serif;
 }
 
 input[type="number"]::-webkit-outer-spin-button,
