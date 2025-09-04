@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
   cumulativeSuccess,
@@ -93,11 +93,12 @@ export default function ChartTab() {
 
   // Monte Carlo auxiliary generation (run on demand)
   const runMonteCarlo = () => {
+    try {
     const S = 200; // samples per point
     const indices = new Set<number>();
     indices.add(0);
     indices.add(maxN);
-    computeXTicks(maxN, chartWidth).forEach((x) => {
+    computeXTicks(maxN, chartWidth || 0).forEach((x) => {
       if (x >= 0 && x <= maxN) indices.add(x);
     });
     const R = Math.floor(maxN / PITY_STEP);
@@ -111,6 +112,11 @@ export default function ChartTab() {
     const arr = pts.map((n) => ({ n, MC: monteCarloSuccess(n, settings, targets, pityAlloc, S) }));
     for (let i = 1; i < arr.length; i++) if (arr[i].MC < arr[i - 1].MC) arr[i].MC = arr[i - 1].MC;
     setMcData(arr);
+    } catch (err) {
+      // In case of any unexpected runtime errors, clear MC data for safety
+      console.error("MC run error", err);
+      setMcData([]);
+    }
   };
 
   // First toggle ON → run once; OFF preserves last results
@@ -118,18 +124,21 @@ export default function ChartTab() {
     if (showMC && mcData.length === 0) runMonteCarlo();
   }, [showMC]);
 
+  // Stable key for pity allocation to avoid identity-based loops
+  const pityKey = useMemo(() => (pityAlloc && pityAlloc.length ? pityAlloc.join(",") : ""), [pityAlloc]);
+
   // When core inputs change, clear any existing single-run simulation (Luck Line)
   useEffect(() => {
     if (simData.length > 0 || eventData.length > 0) clearSim();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targets, settings, pityAlloc, total, maxN]);
+  }, [targets, settings, pityKey, total, maxN]);
 
   // When core inputs change, recompute MC if visible; otherwise clear stale MC data
   useEffect(() => {
     if (showMC) runMonteCarlo();
     else if (mcData.length) setMcData([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showMC, targets, settings, pityAlloc, maxN]);
+  }, [showMC, targets, settings, pityKey, maxN]);
 
   const xTicks = useMemo(() => computeXTicks(maxN, chartWidth), [maxN, chartWidth]);
 

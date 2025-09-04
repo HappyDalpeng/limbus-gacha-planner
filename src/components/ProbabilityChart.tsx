@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import TooltipContent from "./TooltipContent";
 import { useTranslation } from "react-i18next";
-import { memo, useEffect, useMemo, useState, type ReactElement } from "react";
+import { memo, useMemo, useState, useRef, type ReactElement } from "react";
 
 type Datum = { n: number; F: number };
 
@@ -182,32 +182,39 @@ function ProbabilityChart({
     [showMC, mcData],
   );
 
-  // Build XAxis element and freeze it during simulation to avoid re-rendering
-  const xAxisBuilt = useMemo(
-    () => (
-      <XAxis
-        dataKey="n"
-        type="number"
-        domain={[0, maxN]}
-        ticks={xTicks}
-        interval={0}
-        tickLine={false}
-        tickMargin={8}
-        allowDecimals={false}
-      />
-    ),
-    [xTicks, maxN],
-  );
-  const [xAxisFrozen, setXAxisFrozen] = useState<ReactElement | null>(null);
-  useEffect(() => {
-    if (!freezeXAxis) setXAxisFrozen(xAxisBuilt);
-  }, [freezeXAxis, xAxisBuilt]);
-
   return (
     <ResponsiveContainer debounce={100}>
       <ComposedChart data={data as any} margin={{ right: 24, bottom: 12, top: 24 }}>
         <CartesianGrid stroke={colors.grid} strokeDasharray="2 2" />
-        {xAxisFrozen ?? xAxisBuilt}
+        {(() => {
+          // Build a stable XAxis element to prevent flicker during simulation.
+          // We keep the last unfrozen XAxis in a ref and render it while frozen.
+          const built = (
+            <XAxis
+              dataKey="n"
+              type="number"
+              domain={[0, maxN]}
+              ticks={xTicks}
+              interval={0}
+              tickLine={false}
+              tickMargin={8}
+              allowDecimals={false}
+            />
+          );
+          let xRef = (ProbabilityChart as any).__xAxisRef as
+            | React.MutableRefObject<ReactElement | null>
+            | undefined;
+          if (!xRef) {
+            (ProbabilityChart as any).__xAxisRef = { current: null } as React.MutableRefObject<ReactElement | null>;
+            xRef = (ProbabilityChart as any).__xAxisRef as React.MutableRefObject<ReactElement | null>;
+          }
+          // Update cached axis when not frozen
+          // Note: this executes during render; we only mutate a ref (no re-render)
+          if (!freezeXAxis) xRef.current = built;
+          // Fallback if ref empty
+          const axisEl = freezeXAxis && xRef.current ? xRef.current : built;
+          return axisEl;
+        })()}
         <YAxis
           tickFormatter={(v) => (v * 100).toFixed(0) + "%"}
           domain={[0, 1]}

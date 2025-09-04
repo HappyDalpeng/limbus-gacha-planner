@@ -60,6 +60,17 @@ export function useSingleRunSim({
   function start() {
     if (running) return;
     const N = Math.min(total, maxN);
+    // If nothing to simulate, emit a single point and exit gracefully
+    if (N <= 0) {
+      const mA = Math.max(0, targets.A.desired);
+      const mE = Math.max(0, targets.E.desired);
+      const mT = Math.max(0, targets.T.desired);
+      const achieved = mA === 0 && mE === 0 && mT === 0;
+      setSimData([{ n: 0, R: achieved ? 1 : 0 }]);
+      setEvents([]);
+      setRunning(false);
+      return;
+    }
     const emitStep = Math.max(1, Math.floor(N / 400));
     setSimData([]);
     setEvents([]);
@@ -147,9 +158,15 @@ export function useSingleRunSim({
         rafRef.current = null;
         return;
       }
-      rafRef.current = requestAnimationFrame(tick);
+      const raf = (typeof requestAnimationFrame !== "undefined"
+        ? requestAnimationFrame
+        : (cb: FrameRequestCallback) => (setTimeout(() => cb(performance.now()), 16) as any)) as any;
+      rafRef.current = raf(tick);
     };
-    rafRef.current = requestAnimationFrame(tick);
+    const raf = (typeof requestAnimationFrame !== "undefined"
+      ? requestAnimationFrame
+      : (cb: FrameRequestCallback) => (setTimeout(() => cb(performance.now()), 16) as any)) as any;
+    rafRef.current = raf(tick);
   }
 
   function stop() {

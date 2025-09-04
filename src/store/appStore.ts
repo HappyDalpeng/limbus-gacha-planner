@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useMemo } from "react";
 import { persist } from "zustand/middleware";
 import type { GlobalSettings, Resources, Targets } from "@/lib/prob";
 import { autoMaxDraws, computeGreedyPityAlloc } from "@/lib/prob";
@@ -139,8 +140,33 @@ export const useAppStore = create<AppState>()(
 export function usePityAlloc() {
   const settings = useAppStore((s) => s.settings);
   const targets = useAppStore((s) => s.targets);
-  const max = autoMaxDraws(targets);
-  const R = Math.floor(max / 200);
-  const prefix = (settings.exchangePlan || []).slice(0, R);
-  return computeGreedyPityAlloc(max, settings, targets, prefix);
+  // Build a stable key from primitives used in allocation
+  const key = useMemo(() => {
+    const t = targets;
+    const s = settings;
+    const max = autoMaxDraws(targets);
+    const R = Math.floor(max / 200);
+    const prefix = (s.exchangePlan || []).slice(0, R).join("");
+    return [
+      max,
+      t.A.pickup,
+      t.A.desired,
+      t.E.pickup,
+      t.E.desired,
+      t.T.pickup,
+      t.T.desired,
+      s.ownAllExistingPoolEgo ? 1 : 0,
+      prefix,
+    ].join("|");
+  }, [targets, settings]);
+
+  // Compute once per key to keep array identity stable when inputs are unchanged
+  const alloc = useMemo(() => {
+    const max = autoMaxDraws(targets);
+    const R = Math.floor(max / 200);
+    const prefix = (settings.exchangePlan || []).slice(0, R);
+    return computeGreedyPityAlloc(max, settings, targets, prefix);
+  }, [key]);
+
+  return alloc;
 }
